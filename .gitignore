@@ -2,3 +2,4 @@ node_modules/
 .claude-code/
 *.log
 .DS_Store
+.env

@@ -1,3 +1,8 @@
+// API Configuration
+const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? ''
+  : 'https://secure-a-fence-backend.onrender.com';
+
 // Global State Variables
 let productsData = [];
 let cart = []; // Array of { productId, quantity }
@@ -56,7 +61,7 @@ function switchView(viewId) {
 // Fetch Product Catalog from REST API
 async function fetchProducts() {
   try {
-    const res = await fetch('/api/products');
+    const res = await fetch(`${API_BASE}/api/products');
     if (res.ok) {
       productsData = await res.json();
       renderProductGrid(productsData);
@@ -280,7 +285,7 @@ async function submitCheckout() {
   const startDate = document.getElementById('checkoutStartDate').value;
 
   try {
-    const res = await fetch('/api/orders', {
+    const res = await fetch(`${API_BASE}/api/orders', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -318,7 +323,7 @@ async function submitCheckout() {
 async function checkAuthUser() {
   if (!authToken) return;
   try {
-    const res = await fetch('/api/auth/me', {
+    const res = await fetch(`${API_BASE}/api/auth/me', {
       headers: { 'Authorization': `Bearer ${authToken}` }
     });
     if (res.ok) {
@@ -424,7 +429,7 @@ async function loadCustomerPortal() {
   document.getElementById('custCompanyVal').innerText = currentUser.company || 'Direct Buyer';
 
   try {
-    const res = await fetch('/api/orders/my-orders', {
+    const res = await fetch(`${API_BASE}/api/orders/my-orders', {
       headers: { 'Authorization': `Bearer ${authToken}` }
     });
 
@@ -540,7 +545,7 @@ async function loadAdminDashboard() {
 
   try {
     // Overview Metrics
-    const resOverview = await fetch('/api/admin/overview', {
+    const resOverview = await fetch(`${API_BASE}/api/admin/overview', {
       headers: { 'Authorization': `Bearer ${authToken}` }
     });
 
@@ -573,7 +578,7 @@ function switchAdminSubTab(subTab) {
 }
 
 async function loadAdminRentalsTable() {
-  const res = await fetch('/api/admin/rentals', {
+  const res = await fetch(`${API_BASE}/api/admin/rentals', {
     headers: { 'Authorization': `Bearer ${authToken}` }
   });
 
@@ -625,7 +630,7 @@ async function checkinRental(rentalId) {
 }
 
 async function loadAdminSalesTable() {
-  const res = await fetch('/api/admin/sales', {
+  const res = await fetch(`${API_BASE}/api/admin/sales', {
     headers: { 'Authorization': `Bearer ${authToken}` }
   });
 
@@ -673,7 +678,7 @@ async function updateOrderStatus(orderId, status) {
 }
 
 async function loadAdminShipmentsTable() {
-  const res = await fetch('/api/admin/shipments', {
+  const res = await fetch(`${API_BASE}/api/admin/shipments', {
     headers: { 'Authorization': `Bearer ${authToken}` }
   });
 

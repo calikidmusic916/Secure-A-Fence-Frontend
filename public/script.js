@@ -374,12 +374,22 @@ async function checkAuthUser() {
 
 function updateAuthUI() {
   const authStatus = document.getElementById('authStatusText');
+  const adminNav = document.getElementById('adminNavLi');
+
   if (currentUser) {
     authStatus.innerText = `Logged in as ${currentUser.name} (${currentUser.role.toUpperCase()})`;
     authStatus.style.color = 'var(--success)';
+
+    // Show admin navigation if user is admin
+    if (currentUser.role === 'admin') {
+      if (adminNav) adminNav.style.display = 'block';
+    } else {
+      if (adminNav) adminNav.style.display = 'none';
+    }
   } else {
     authStatus.innerText = 'Not Signed In';
     authStatus.style.color = 'var(--accent)';
+    if (adminNav) adminNav.style.display = 'none';
   }
 }
 
@@ -578,8 +588,8 @@ async function submitRentalAction() {
 // --- ADMIN OPERATIONS & MANAGEMENT DASHBOARD ---
 
 async function loadAdminDashboard() {
-  if (!authToken) {
-    alert('Admin authentication required. Please sign in as admin@secureafence.com.');
+  if (!authToken || !currentUser || currentUser.role !== 'admin') {
+    alert('Admin authentication required.');
     switchView('portal-view');
     return;
   }
@@ -598,10 +608,11 @@ async function loadAdminDashboard() {
       document.getElementById('adminMetricWarehouseStock').innerText = `${metrics.panelsInWarehouse} Panels`;
     }
 
-    // Load Admin Rentals Fleet Table
+    // Load All Admin Tables
     loadAdminRentalsTable();
     loadAdminSalesTable();
     loadAdminShipmentsTable();
+    loadAdminProductsTable();
 
   } catch (e) {
     console.error('Error loading admin dashboard', e);
@@ -612,10 +623,12 @@ function switchAdminSubTab(subTab) {
   document.getElementById('adminSubTabRentals').style.display = subTab === 'rentals' ? 'block' : 'none';
   document.getElementById('adminSubTabSales').style.display = subTab === 'sales' ? 'block' : 'none';
   document.getElementById('adminSubTabShipments').style.display = subTab === 'shipments' ? 'block' : 'none';
+  document.getElementById('adminSubTabProducts').style.display = subTab === 'products' ? 'block' : 'none';
 
   document.getElementById('adminTab1').classList.toggle('active', subTab === 'rentals');
   document.getElementById('adminTab2').classList.toggle('active', subTab === 'sales');
   document.getElementById('adminTab3').classList.toggle('active', subTab === 'shipments');
+  document.getElementById('adminTab4').classList.toggle('active', subTab === 'products');
 }
 
 async function loadAdminRentalsTable() {
@@ -837,4 +850,212 @@ function addCustomGateToCart() {
 
   openCartModal();
   alert(`${qty}x Custom Gate Package added to your cart!`);
+}
+
+// --- ADMIN PRODUCT MANAGEMENT FUNCTIONS ---
+
+async function loadAdminProductsTable() {
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/products`, {
+      headers: { 'Authorization': `Bearer ${authToken}` }
+    });
+
+    if (res.ok) {
+      const products = await res.json();
+      const tbody = document.getElementById('adminProductsTableBody');
+      if (!tbody) return;
+
+      tbody.innerHTML = products.map(p => `
+        <tr>
+          <td><img src="${p.image.startsWith('/') ? API_BASE + p.image : p.image}" style="width: 40px; height: 40px; object-fit: contain;"></td>
+          <td>
+            <strong>${p.name}</strong><br>
+            <small style="color: var(--text-muted);">${p.id}</small>
+          </td>
+          <td>${p.type.toUpperCase()}</td>
+          <td>${p.inStock} units</td>
+          <td>
+            Buy: $${p.salePrice.toFixed(2)}<br>
+            Rent: $${p.rentalPriceMonthly.toFixed(2)}
+          </td>
+          <td>
+            <span class="status-badge ${p.suspended ? 'status-returned' : 'status-active'}">
+              ${p.suspended ? 'SUSPENDED' : 'ACTIVE'}
+            </span>
+          </td>
+          <td>
+            <div style="display: flex; gap: 0.5rem;">
+              <button class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;" onclick="openProductModal('${p.id}')">Edit</button>
+              <button class="btn ${p.suspended ? 'btn-primary' : 'btn-outline'}" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;" onclick="toggleProductSuspension('${p.id}', ${p.suspended})">
+                ${p.suspended ? 'Activate' : 'Suspend'}
+              </button>
+              <button class="btn btn-danger" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; background: var(--warning); color: #fff;" onclick="deleteProduct('${p.id}')">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+  } catch (e) {
+    console.error('Error loading admin products', e);
+  }
+}
+
+function openProductModal(productId = null) {
+  const modal = document.getElementById('productModal');
+  const title = document.getElementById('productModalTitle');
+  const idInput = document.getElementById('editProductId');
+
+  // Clear fields
+  document.getElementById('prodName').value = '';
+  document.getElementById('prodType').value = 'panel';
+  document.getElementById('prodStock').value = '0';
+  document.getElementById('prodSalePrice').value = '0';
+  document.getElementById('prodRentalPrice').value = '0';
+  document.getElementById('prodDesc').value = '';
+  document.getElementById('prodImageUrl').value = '/assets/panel.png';
+  document.getElementById('prodImagePreview').innerHTML = `<img src="/assets/panel.png" style="max-width: 100%; max-height: 100%;">`;
+
+  if (productId) {
+    title.innerText = 'Edit Product';
+    idInput.value = productId;
+    const p = productsData.find(item => item.id === productId);
+    if (p) {
+      document.getElementById('prodName').value = p.name;
+      document.getElementById('prodType').value = p.type;
+      document.getElementById('prodStock').value = p.inStock;
+      document.getElementById('prodSalePrice').value = p.salePrice;
+      document.getElementById('prodRentalPrice').value = p.rentalPriceMonthly;
+      document.getElementById('prodDesc').value = p.description;
+      document.getElementById('prodImageUrl').value = p.image;
+      const fullImgUrl = p.image.startsWith('/') ? API_BASE + p.image : p.image;
+      document.getElementById('prodImagePreview').innerHTML = `<img src="${fullImgUrl}" style="max-width: 100%; max-height: 100%;">`;
+    }
+  } else {
+    title.innerText = 'Add New Product';
+    idInput.value = '';
+  }
+
+  modal.classList.add('active');
+}
+
+function closeProductModal() {
+  document.getElementById('productModal').classList.remove('active');
+}
+
+async function previewProductImage(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    document.getElementById('prodImagePreview').innerHTML = `<img src="${e.target.result}" style="max-width: 100%; max-height: 100%;">`;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function saveProduct() {
+  const productId = document.getElementById('editProductId').value;
+  const name = document.getElementById('prodName').value;
+  const type = document.getElementById('prodType').value;
+  const inStock = parseInt(document.getElementById('prodStock').value) || 0;
+  const salePrice = parseFloat(document.getElementById('prodSalePrice').value) || 0;
+  const rentalPriceMonthly = parseFloat(document.getElementById('prodRentalPrice').value) || 0;
+  const description = document.getElementById('prodDesc').value;
+  let image = document.getElementById('prodImageUrl').value;
+
+  if (!name) {
+    alert('Please enter a product name.');
+    return;
+  }
+
+  try {
+    // Handle Image Upload if a file was selected
+    const fileInput = document.getElementById('prodImageFile');
+    if (fileInput.files.length > 0) {
+      const formData = new FormData();
+      formData.append('image', fileInput.files[0]);
+
+      const uploadRes = await fetch(`${API_BASE}/api/admin/products/upload`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${authToken}` },
+        body: formData
+      });
+
+      if (uploadRes.ok) {
+        const uploadData = await uploadRes.json();
+        image = uploadData.imageUrl;
+      } else {
+        alert('Image upload failed, but saving product with default image.');
+      }
+    }
+
+    const productData = {
+      name, type, inStock, salePrice, rentalPriceMonthly, description, image,
+      category: 'sales'
+    };
+
+    const method = productId ? 'PUT' : 'POST';
+    const url = productId ? `${API_BASE}/api/admin/products/${productId}` : `${API_BASE}/api/admin/products`;
+
+    const res = await fetch(url, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`
+      },
+      body: JSON.stringify(productData)
+    });
+
+    if (res.ok) {
+      alert('Product saved successfully!');
+      closeProductModal();
+      loadAdminProductsTable();
+      fetchProducts(); // Refresh public list too
+    } else {
+      const data = await res.json();
+      alert('Error saving product: ' + (data.error || 'Unknown error'));
+    }
+  } catch (err) {
+    console.error('Save product error:', err);
+    alert('Network error saving product.');
+  }
+}
+
+async function toggleProductSuspension(productId, currentStatus) {
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/products/${productId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`
+      },
+      body: JSON.stringify({ suspended: !currentStatus })
+    });
+
+    if (res.ok) {
+      loadAdminProductsTable();
+      fetchProducts();
+    }
+  } catch (e) {
+    console.error('Error toggling suspension', e);
+  }
+}
+
+async function deleteProduct(productId) {
+  if (!confirm('Are you sure you want to PERMANENTLY delete this product? This cannot be undone.')) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/products/${productId}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${authToken}` }
+    });
+
+    if (res.ok) {
+      alert('Product deleted.');
+      loadAdminProductsTable();
+      fetchProducts();
+    }
+  } catch (e) {
+    console.error('Error deleting product', e);
+  }
 }

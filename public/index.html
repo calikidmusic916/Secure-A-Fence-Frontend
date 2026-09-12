@@ -20,7 +20,7 @@
         <li><button class="nav-btn" onclick="switchView('calc-view')">📐 Fence Calculator</button></li>
         <li><button class="nav-btn" onclick="switchView('delivery-view')">🚚 Delivery Info</button></li>
         <li><button class="nav-btn" onclick="switchView('portal-view')" id="portalNavBtn">👤 Customer Portal</button></li>
-        <li><button class="nav-btn admin-nav-btn" onclick="switchView('admin-view')">🛡️ Admin Management</button></li>
+        <li id="adminNavLi" style="display: none;"><button class="nav-btn admin-nav-btn" onclick="switchView('admin-view')">🛡️ Admin Management</button></li>
         <li>
           <button class="nav-btn cart-btn" onclick="openCartModal()">
             🛒 Cart <span class="badge" id="cartBadgeCount">0</span>
@@ -415,6 +415,7 @@
         <button class="tab-btn active" id="adminTab1" onclick="switchAdminSubTab('rentals')">📋 Active Rental Asset Fleet</button>
         <button class="tab-btn" id="adminTab2" onclick="switchAdminSubTab('sales')">📦 Sales Orders</button>
         <button class="tab-btn" id="adminTab3" onclick="switchAdminSubTab('shipments')">🚚 Shipping &amp; Delivery Logistics</button>
+        <button class="tab-btn" id="adminTab4" onclick="switchAdminSubTab('products')">🏷️ Product Inventory</button>
       </div>
 
       <!-- ADMIN SUB-TAB 1: RENTALS ASSET TRACKING -->
@@ -475,7 +476,7 @@
 
         <div id="routeOptimizationSummary" style="display: none; background: var(--bg-dark); border: 1px solid var(--accent); padding: 1rem; border-radius: 0.75rem; margin-bottom: 1.5rem;">
           <h4 style="color: var(--accent); margin-bottom: 0.5rem;">📍 Optimized Delivery Sequence</h4>
-          <div id="routeSummaryStats" style="font-size: 0.9rem; color: var(--text-main); margin-bottom: 0.75rem; display: flex; gap: 2rem;">
+          <div id="routeSummaryStats" style="font-size: 0.9rem; color: var(--text-main); margin-bottom: 0.75rem; display: gap: 2rem;">
             <!-- Stats like Total Miles/Time -->
           </div>
           <div id="routeStopsList" style="display: flex; flex-direction: column; gap: 0.5rem;">
@@ -498,6 +499,32 @@
               </tr>
             </thead>
             <tbody id="adminShipmentsTableBody">
+              <!-- Loaded via JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ADMIN SUB-TAB 4: PRODUCT MANAGEMENT -->
+      <div id="adminSubTabProducts" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h3>Product Inventory Management</h3>
+          <button class="btn btn-accent" onclick="openProductModal()">➕ Add New Product</button>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Image</th>
+                <th>Name / ID</th>
+                <th>Type</th>
+                <th>Stock</th>
+                <th>Price (Buy/Rent)</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="adminProductsTableBody">
               <!-- Loaded via JavaScript -->
             </tbody>
           </table>
@@ -562,6 +589,73 @@
     </div>
   </div>
 
+  <!-- PRODUCT ADD/EDIT MODAL -->
+  <div class="modal-overlay" id="productModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="productModalTitle">Add New Product</h3>
+        <button class="close-btn" onclick="closeProductModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editProductId">
+
+        <div class="form-group">
+          <label class="form-label">Product Name</label>
+          <input type="text" id="prodName" class="form-input" placeholder="e.g. 10ft Fence Panel">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label class="form-label">Type</label>
+            <select id="prodType" class="form-select">
+              <option value="panel">Panel</option>
+              <option value="stand">Stand</option>
+              <option value="clip">Clip</option>
+              <option value="gate">Gate</option>
+              <option value="accessory">Accessory</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Inventory Stock</label>
+            <input type="number" id="prodStock" class="form-input" value="0">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label class="form-label">Sale Price ($)</label>
+            <input type="number" id="prodSalePrice" class="form-input" value="0" step="0.01">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Rental Price ($/mo)</label>
+            <input type="number" id="prodRentalPrice" class="form-input" value="0" step="0.01">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Product Description</label>
+          <textarea id="prodDesc" class="form-textarea" rows="2"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Product Image</label>
+          <div style="display: flex; gap: 1rem; align-items: center;">
+            <div id="prodImagePreview" style="width: 60px; height: 60px; border: 1px solid var(--border); border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; background: var(--bg-dark); overflow: hidden;">
+              <img src="/assets/panel.png" style="max-width: 100%; max-height: 100%;">
+            </div>
+            <input type="file" id="prodImageFile" style="display: none;" onchange="previewProductImage(event)">
+            <button class="btn btn-outline" onclick="document.getElementById('prodImageFile').click()">Choose Image</button>
+            <input type="hidden" id="prodImageUrl" value="/assets/panel.png">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeProductModal()">Cancel</button>
+        <button class="btn btn-accent" onclick="saveProduct()">Save Product</button>
+      </div>
+    </div>
+  </div>
+
   <!-- RENTAL EXTEND / PICKUP MODAL -->
   <div class="modal-overlay" id="rentalActionModal">
     <div class="modal-card">
@@ -615,6 +709,7 @@
         <p>📞 Phone Orders: 279-261-3890</p>
         <p>📧 Email: sales@secureafence.com</p>
         <p>© 2026 Secure-A-Fence Inc. All rights reserved.</p>
+        <a href="#" onclick="switchView('portal-view'); toggleAuthTab('login');" style="color: var(--text-muted); font-size: 0.75rem; text-decoration: none; margin-top: 1rem; display: block; opacity: 0.5;">Admin Access</a>
       </div>
     </div>
   </footer>

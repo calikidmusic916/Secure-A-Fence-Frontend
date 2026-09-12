@@ -416,6 +416,8 @@
         <button class="tab-btn" id="adminTab2" onclick="switchAdminSubTab('sales')">📦 Sales Orders</button>
         <button class="tab-btn" id="adminTab3" onclick="switchAdminSubTab('shipments')">🚚 Shipping &amp; Delivery Logistics</button>
         <button class="tab-btn" id="adminTab4" onclick="switchAdminSubTab('products')">🏷️ Product Inventory</button>
+        <button class="tab-btn" id="adminTab5" onclick="switchAdminSubTab('invoices')">💵 Invoices</button>
+        <button class="tab-btn" id="adminTab6" onclick="switchAdminSubTab('customers')">👥 Customers</button>
       </div>
 
       <!-- ADMIN SUB-TAB 1: RENTALS ASSET TRACKING -->
@@ -525,6 +527,55 @@
               </tr>
             </thead>
             <tbody id="adminProductsTableBody">
+              <!-- Loaded via JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ADMIN SUB-TAB 5: INVOICES -->
+      <div id="adminSubTabInvoices" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h3>Invoices Management</h3>
+          <button class="btn btn-accent" onclick="openInvoiceModal()">➕ Create New Invoice</button>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Invoice ID</th>
+                <th>Order Ref</th>
+                <th>Customer</th>
+                <th>Amount</th>
+                <th>Date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="adminInvoicesTableBody">
+              <!-- Loaded via JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ADMIN SUB-TAB 6: CUSTOMERS -->
+      <div id="adminSubTabCustomers" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h3>Customer Directory</h3>
+          <button class="btn btn-accent" onclick="openCustomerModal()">➕ Add New Customer</button>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Company</th>
+                <th>Phone</th>
+                <th>Role</th>
+              </tr>
+            </thead>
+            <tbody id="adminCustomersTableBody">
               <!-- Loaded via JavaScript -->
             </tbody>
           </table>
@@ -652,6 +703,74 @@
       <div class="modal-footer">
         <button class="btn btn-outline" onclick="closeProductModal()">Cancel</button>
         <button class="btn btn-accent" onclick="saveProduct()">Save Product</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CUSTOMER ADD MODAL -->
+  <div class="modal-overlay" id="customerModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Add New Customer</h3>
+        <button class="close-btn" onclick="closeCustomerModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input type="text" id="newCustName" class="form-input" placeholder="e.g. John Doe">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" id="newCustEmail" class="form-input" placeholder="john@doe.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Company Name</label>
+          <input type="text" id="newCustCompany" class="form-input" placeholder="Apex Construction">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone Number</label>
+          <input type="text" id="newCustPhone" class="form-input" placeholder="555-123-4567">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeCustomerModal()">Cancel</button>
+        <button class="btn btn-accent" onclick="saveCustomer()">Create Customer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- INVOICE ADD MODAL -->
+  <div class="modal-overlay" id="invoiceModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Create New Invoice</h3>
+        <button class="close-btn" onclick="closeInvoiceModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Order Reference ID</label>
+          <input type="text" id="invOrderId" class="form-input" placeholder="ORD-1234">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Customer Name</label>
+          <input type="text" id="invCustName" class="form-input">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Total Amount ($)</label>
+          <input type="number" id="invAmount" class="form-input" step="0.01">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Payment Status</label>
+          <select id="invStatus" class="form-select">
+            <option value="Unpaid">Unpaid</option>
+            <option value="Paid">Paid</option>
+            <option value="Partial">Partial</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeInvoiceModal()">Cancel</button>
+        <button class="btn btn-accent" onclick="saveInvoice()">Generate Invoice</button>
       </div>
     </div>
   </div>

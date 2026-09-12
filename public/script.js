@@ -100,7 +100,7 @@ function renderProductGrid(products) {
     <div class="product-card">
       <div class="product-img-wrapper">
         <span class="stock-tag">In Yard: ${p.inStock} units</span>
-        <img src="${p.image}" alt="${p.name}" class="product-img">
+        <img src="${p.image.startsWith('/') ? API_BASE + p.image : p.image}" alt="${p.name}" class="product-img">
       </div>
       <div class="product-body">
         <h3 class="product-name">${p.name}</h3>
@@ -256,9 +256,11 @@ function renderCartModal() {
     const itemTotal = unitPrice * item.quantity;
     subtotal += itemTotal;
 
+    const imgUrl = prod.image.startsWith('/') ? API_BASE + prod.image : prod.image;
+
     return `
       <div class="cart-item">
-        <img src="${prod.image}" style="width: 45px; height: 45px; object-fit: contain;">
+        <img src="${imgUrl}" style="width: 45px; height: 45px; object-fit: contain;">
         <div class="cart-item-title">
           <div>${prod.name}</div>
           <small style="color: var(--text-muted);">$${unitPrice.toFixed(2)} ${orderType === 'rental' ? '/ month' : 'each'}</small>
@@ -613,6 +615,8 @@ async function loadAdminDashboard() {
     loadAdminSalesTable();
     loadAdminShipmentsTable();
     loadAdminProductsTable();
+    loadAdminInvoicesTable();
+    loadAdminCustomersTable();
 
   } catch (e) {
     console.error('Error loading admin dashboard', e);
@@ -624,11 +628,15 @@ function switchAdminSubTab(subTab) {
   document.getElementById('adminSubTabSales').style.display = subTab === 'sales' ? 'block' : 'none';
   document.getElementById('adminSubTabShipments').style.display = subTab === 'shipments' ? 'block' : 'none';
   document.getElementById('adminSubTabProducts').style.display = subTab === 'products' ? 'block' : 'none';
+  document.getElementById('adminSubTabInvoices').style.display = subTab === 'invoices' ? 'block' : 'none';
+  document.getElementById('adminSubTabCustomers').style.display = subTab === 'customers' ? 'block' : 'none';
 
   document.getElementById('adminTab1').classList.toggle('active', subTab === 'rentals');
   document.getElementById('adminTab2').classList.toggle('active', subTab === 'sales');
   document.getElementById('adminTab3').classList.toggle('active', subTab === 'shipments');
   document.getElementById('adminTab4').classList.toggle('active', subTab === 'products');
+  document.getElementById('adminTab5').classList.toggle('active', subTab === 'invoices');
+  document.getElementById('adminTab6').classList.toggle('active', subTab === 'customers');
 }
 
 async function loadAdminRentalsTable() {
@@ -816,7 +824,7 @@ function updateGateDesigner() {
 
   let previewHtml = `
     <div style="position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
-      <img src="${gateProd.image}" style="height: 120px; opacity: 0.8;">
+      <img src="${gateProd.image.startsWith('/') ? API_BASE + gateProd.image : gateProd.image}" style="height: 120px; opacity: 0.8;">
       <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border: 2px dashed var(--accent); width: ${style === 'pedestrian' ? '40px' : '100px'}; height: 80px; background: rgba(56, 189, 248, 0.1); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; color: var(--accent); font-weight: bold; text-transform: uppercase;">
         ${style.replace('-', ' ')}
       </div>
@@ -1057,5 +1065,151 @@ async function deleteProduct(productId) {
     }
   } catch (e) {
     console.error('Error deleting product', e);
+  }
+}
+
+// --- ADMIN INVOICE MANAGEMENT ---
+
+async function loadAdminInvoicesTable() {
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/invoices`, {
+      headers: { 'Authorization': `Bearer ${authToken}` }
+    });
+
+    if (res.ok) {
+      const invoices = await res.json();
+      const tbody = document.getElementById('adminInvoicesTableBody');
+      if (!tbody) return;
+
+      tbody.innerHTML = invoices.map(inv => `
+        <tr>
+          <td><strong>${inv.id}</strong></td>
+          <td>${inv.orderId}</td>
+          <td>${inv.customerName}</td>
+          <td>$${inv.amount.toFixed(2)}</td>
+          <td>${inv.createdAt}</td>
+          <td><span class="status-badge ${inv.status === 'Paid' ? 'status-active' : 'status-pending'}">${inv.status}</span></td>
+        </tr>
+      `).join('');
+    }
+  } catch (e) {
+    console.error('Error loading invoices', e);
+  }
+}
+
+function openInvoiceModal() {
+  document.getElementById('invOrderId').value = '';
+  document.getElementById('invCustName').value = '';
+  document.getElementById('invAmount').value = '';
+  document.getElementById('invStatus').value = 'Unpaid';
+  document.getElementById('invoiceModal').classList.add('active');
+}
+
+function closeInvoiceModal() {
+  document.getElementById('invoiceModal').classList.remove('active');
+}
+
+async function saveInvoice() {
+  const orderId = document.getElementById('invOrderId').value;
+  const customerName = document.getElementById('invCustName').value;
+  const amount = parseFloat(document.getElementById('invAmount').value);
+  const status = document.getElementById('invStatus').value;
+
+  if (!orderId || !customerName || isNaN(amount)) {
+    alert('Please fill in all required fields.');
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/invoices`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`
+      },
+      body: JSON.stringify({ orderId, customerName, amount, status })
+    });
+
+    if (res.ok) {
+      alert('Invoice generated successfully!');
+      closeInvoiceModal();
+      loadAdminInvoicesTable();
+    }
+  } catch (e) {
+    alert('Error saving invoice.');
+  }
+}
+
+// --- ADMIN CUSTOMER MANAGEMENT ---
+
+async function loadAdminCustomersTable() {
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/customers`, {
+      headers: { 'Authorization': `Bearer ${authToken}` }
+    });
+
+    if (res.ok) {
+      const customers = await res.json();
+      const tbody = document.getElementById('adminCustomersTableBody');
+      if (!tbody) return;
+
+      tbody.innerHTML = customers.map(c => `
+        <tr>
+          <td><strong>${c.name}</strong></td>
+          <td>${c.email}</td>
+          <td>${c.company || 'N/A'}</td>
+          <td>${c.phone || 'N/A'}</td>
+          <td><span class="status-badge status-delivered">${c.role.toUpperCase()}</span></td>
+        </tr>
+      `).join('');
+    }
+  } catch (e) {
+    console.error('Error loading customers', e);
+  }
+}
+
+function openCustomerModal() {
+  document.getElementById('newCustName').value = '';
+  document.getElementById('newCustEmail').value = '';
+  document.getElementById('newCustCompany').value = '';
+  document.getElementById('newCustPhone').value = '';
+  document.getElementById('customerModal').classList.add('active');
+}
+
+function closeCustomerModal() {
+  document.getElementById('customerModal').classList.remove('active');
+}
+
+async function saveCustomer() {
+  const name = document.getElementById('newCustName').value;
+  const email = document.getElementById('newCustEmail').value;
+  const company = document.getElementById('newCustCompany').value;
+  const phone = document.getElementById('newCustPhone').value;
+
+  if (!name || !email) {
+    alert('Name and Email are required.');
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/customers`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`
+      },
+      body: JSON.stringify({ name, email, company, phone })
+    });
+
+    if (res.ok) {
+      alert('Customer created successfully!');
+      closeCustomerModal();
+      loadAdminCustomersTable();
+    } else {
+      const data = await res.json();
+      alert('Error: ' + data.error);
+    }
+  } catch (e) {
+    alert('Error saving customer.');
   }
 }

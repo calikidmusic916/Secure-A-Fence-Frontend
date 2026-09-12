@@ -3,6 +3,8 @@ const API_BASE = (window.location.hostname === 'localhost' || window.location.ho
   ? 'http://' + window.location.hostname + ':3000'
   : 'https://secure-a-fence-backend.onrender.com';
 
+console.log('Using API_BASE:', API_BASE);
+
 // Global State Variables
 let productsData = [];
 let cart = []; // Array of { productId, quantity }

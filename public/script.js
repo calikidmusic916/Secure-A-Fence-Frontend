@@ -1,6 +1,6 @@
 // API Configuration
 const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? ''
+  ? 'http://localhost:3000'
   : 'https://secure-a-fence-backend.onrender.com';
 
 // Global State Variables
@@ -25,12 +25,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // View Switching Navigation
 function toggleMobileMenu() {
-  document.getElementById('navLinksList').classList.toggle('open');
+  const navLinks = document.getElementById('navLinksList');
+  if (navLinks) navLinks.classList.toggle('open');
 }
 
 function switchView(viewId) {
   // Close mobile menu when switching views
-  document.getElementById('navLinksList').classList.remove('open');
+  const navLinks = document.getElementById('navLinksList');
+  if (navLinks) navLinks.classList.remove('open');
+
   document.querySelectorAll('.page-view').forEach(view => {
     view.classList.remove('active');
   });
@@ -61,10 +64,12 @@ function switchView(viewId) {
 // Fetch Product Catalog from REST API
 async function fetchProducts() {
   try {
-    const res = await fetch(`${API_BASE}/api/products');
+    const res = await fetch(`${API_BASE}/api/products`);
     if (res.ok) {
       productsData = await res.json();
       renderProductGrid(productsData);
+    } else {
+      console.error('Failed to fetch products:', res.statusText);
     }
   } catch (err) {
     console.error('Error fetching products:', err);
@@ -112,7 +117,7 @@ function renderProductGrid(products) {
 // Filter Catalog Categories
 function filterCatalog(category) {
   document.querySelectorAll('.filter-chip').forEach(chip => chip.classList.remove('active'));
-  event.target.classList.add('active');
+  if (event && event.target) event.target.classList.add('active');
 
   if (category === 'all') {
     renderProductGrid(productsData);
@@ -285,7 +290,7 @@ async function submitCheckout() {
   const startDate = document.getElementById('checkoutStartDate').value;
 
   try {
-    const res = await fetch(`${API_BASE}/api/orders', {
+    const res = await fetch(`${API_BASE}/api/orders`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -323,7 +328,7 @@ async function submitCheckout() {
 async function checkAuthUser() {
   if (!authToken) return;
   try {
-    const res = await fetch(`${API_BASE}/api/auth/me', {
+    const res = await fetch(`${API_BASE}/api/auth/me`, {
       headers: { 'Authorization': `Bearer ${authToken}` }
     });
     if (res.ok) {
@@ -376,7 +381,7 @@ async function handleAuthSubmit(e) {
   const email = document.getElementById('authEmail').value;
   const password = document.getElementById('authPassword').value;
 
-  const endpoint = isRegister ? '/api/auth/register' : '/api/auth/login';
+  const endpoint = isRegister ? `${API_BASE}/api/auth/register` : `${API_BASE}/api/auth/login`;
   const bodyData = isRegister ? {
     name: document.getElementById('authName').value,
     company: document.getElementById('authCompany').value,
@@ -429,7 +434,7 @@ async function loadCustomerPortal() {
   document.getElementById('custCompanyVal').innerText = currentUser.company || 'Direct Buyer';
 
   try {
-    const res = await fetch(`${API_BASE}/api/orders/my-orders', {
+    const res = await fetch(`${API_BASE}/api/orders/my-orders`, {
       headers: { 'Authorization': `Bearer ${authToken}` }
     });
 
@@ -501,7 +506,7 @@ async function submitRentalAction() {
   const rentalId = document.getElementById('targetRentalId').value;
   const actionType = document.getElementById('targetActionType').value;
 
-  const endpoint = actionType === 'extend' ? '/api/rentals/extend' : '/api/rentals/request-pickup';
+  const endpoint = actionType === 'extend' ? `${API_BASE}/api/rentals/extend` : `${API_BASE}/api/rentals/request-pickup`;
   const bodyData = actionType === 'extend' ? {
     rentalId,
     additionalDays: document.getElementById('extendDays').value
@@ -545,7 +550,7 @@ async function loadAdminDashboard() {
 
   try {
     // Overview Metrics
-    const resOverview = await fetch(`${API_BASE}/api/admin/overview', {
+    const resOverview = await fetch(`${API_BASE}/api/admin/overview`, {
       headers: { 'Authorization': `Bearer ${authToken}` }
     });
 
@@ -578,7 +583,7 @@ function switchAdminSubTab(subTab) {
 }
 
 async function loadAdminRentalsTable() {
-  const res = await fetch(`${API_BASE}/api/admin/rentals', {
+  const res = await fetch(`${API_BASE}/api/admin/rentals`, {
     headers: { 'Authorization': `Bearer ${authToken}` }
   });
 
@@ -611,7 +616,7 @@ async function checkinRental(rentalId) {
   if (!confirm(`Are you sure you want to check in rental ${rentalId}? This will mark it as returned and restore panel counts back to warehouse stock.`)) return;
 
   try {
-    const res = await fetch(`/api/admin/rentals/${rentalId}/checkin`, {
+    const res = await fetch(`${API_BASE}/api/admin/rentals/${rentalId}/checkin`, {
       method: 'PUT',
       headers: { 'Authorization': `Bearer ${authToken}` }
     });
@@ -630,7 +635,7 @@ async function checkinRental(rentalId) {
 }
 
 async function loadAdminSalesTable() {
-  const res = await fetch(`${API_BASE}/api/admin/sales', {
+  const res = await fetch(`${API_BASE}/api/admin/sales`, {
     headers: { 'Authorization': `Bearer ${authToken}` }
   });
 
@@ -661,7 +666,7 @@ async function loadAdminSalesTable() {
 
 async function updateOrderStatus(orderId, status) {
   try {
-    const res = await fetch(`/api/admin/sales/${orderId}/status`, {
+    const res = await fetch(`${API_BASE}/api/admin/sales/${orderId}/status`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -678,7 +683,7 @@ async function updateOrderStatus(orderId, status) {
 }
 
 async function loadAdminShipmentsTable() {
-  const res = await fetch(`${API_BASE}/api/admin/shipments', {
+  const res = await fetch(`${API_BASE}/api/admin/shipments`, {
     headers: { 'Authorization': `Bearer ${authToken}` }
   });
 
@@ -710,18 +715,18 @@ function updateGateDesigner() {
   const preview = document.getElementById('gateVisualPreview');
 
   if (style === 'none') {
-    hardwareGroup.style.display = 'none';
-    qtyGroup.style.display = 'none';
-    orderTypeGroup.style.display = 'none';
-    resultsBox.style.display = 'none';
-    preview.innerHTML = '<span style="color: var(--text-muted); font-size: 0.9rem;">Select a gate style to view preview</span>';
+    if (hardwareGroup) hardwareGroup.style.display = 'none';
+    if (qtyGroup) qtyGroup.style.display = 'none';
+    if (orderTypeGroup) orderTypeGroup.style.display = 'none';
+    if (resultsBox) resultsBox.style.display = 'none';
+    if (preview) preview.innerHTML = '<span style="color: var(--text-muted); font-size: 0.9rem;">Select a gate style to view preview</span>';
     return;
   }
 
-  hardwareGroup.style.display = 'block';
-  qtyGroup.style.display = 'block';
-  orderTypeGroup.style.display = 'block';
-  resultsBox.style.display = 'block';
+  if (hardwareGroup) hardwareGroup.style.display = 'block';
+  if (qtyGroup) qtyGroup.style.display = 'block';
+  if (orderTypeGroup) orderTypeGroup.style.display = 'block';
+  if (resultsBox) resultsBox.style.display = 'block';
 
   const orderType = document.getElementById('gateOrderType').value;
   const qty = parseInt(document.getElementById('gateQuantity').value) || 1;
@@ -776,7 +781,7 @@ function updateGateDesigner() {
   }
 
   previewHtml += '</div>';
-  preview.innerHTML = previewHtml;
+  if (preview) preview.innerHTML = previewHtml;
 }
 
 function addCustomGateToCart() {

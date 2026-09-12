@@ -1185,6 +1185,7 @@ async function saveCustomer() {
   const email = document.getElementById('newCustEmail').value;
   const company = document.getElementById('newCustCompany').value;
   const phone = document.getElementById('newCustPhone').value;
+  const role = document.getElementById('newCustRole').value;
 
   if (!name || !email) {
     alert('Name and Email are required.');
@@ -1198,11 +1199,11 @@ async function saveCustomer() {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${authToken}`
       },
-      body: JSON.stringify({ name, email, company, phone })
+      body: JSON.stringify({ name, email, company, phone, role })
     });
 
     if (res.ok) {
-      alert('Customer created successfully!');
+      alert(`${role === 'admin' ? 'Administrator' : 'Customer'} created successfully!`);
       closeCustomerModal();
       loadAdminCustomersTable();
     } else {

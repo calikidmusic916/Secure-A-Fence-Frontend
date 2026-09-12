@@ -1,9 +1,12 @@
 // API Configuration
-const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.168.') || window.location.hostname.startsWith('10.'))
-  ? 'http://' + window.location.hostname + ':3000'
-  : 'https://secure-a-fence-backend.onrender.com';
+let API_BASE = 'https://secure-a-fence-backend.onrender.com';
 
-console.log('Using API_BASE:', API_BASE);
+if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.168.') || window.location.hostname.startsWith('10.')) {
+  API_BASE = 'http://' + window.location.hostname + ':3000';
+}
+
+console.log('--- Secure-A-Fence Frontend Initialized ---');
+console.log('Connecting to Backend at:', API_BASE);
 
 // Global State Variables
 let productsData = [];

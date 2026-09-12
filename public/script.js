@@ -65,6 +65,9 @@ function switchView(viewId) {
 
 // Fetch Product Catalog from REST API
 async function fetchProducts() {
+  const container = document.getElementById('productGridContainer');
+  if (container) container.innerHTML = `<p style="grid-column: 1/-1; text-align: center;">⌛ Loading products...</p>`;
+
   try {
     const res = await fetch(`${API_BASE}/api/products`);
     if (res.ok) {
@@ -72,9 +75,11 @@ async function fetchProducts() {
       renderProductGrid(productsData);
     } else {
       console.error('Failed to fetch products:', res.statusText);
+      if (container) container.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--warning);">❌ Error loading products: ${res.statusText}</p>`;
     }
   } catch (err) {
     console.error('Error fetching products:', err);
+    if (container) container.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--warning);">❌ Network Error: Could not connect to backend.</p>`;
   }
 }
 

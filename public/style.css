@@ -314,9 +314,9 @@ body {
   position: absolute;
   top: 10px;
   right: 10px;
-  background: rgba(16, 185, 129, 0.2);
-  color: var(--success);
-  border: 1px solid var(--success);
+  background: rgba(248, 113, 113, 0.2);
+  color: var(--warning);
+  border: 1px solid var(--warning);
   padding: 0.2rem 0.6rem;
   border-radius: 0.5rem;
   font-size: 0.75rem;

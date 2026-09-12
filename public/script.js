@@ -1,6 +1,6 @@
 // API Configuration
-const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://localhost:3000'
+const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.168.') || window.location.hostname.startsWith('10.'))
+  ? 'http://' + window.location.hostname + ':3000'
   : 'https://secure-a-fence-backend.onrender.com';
 
 // Global State Variables
@@ -377,11 +377,14 @@ function toggleAuthTab(tab) {
 
 async function handleAuthSubmit(e) {
   e.preventDefault();
+  console.log('Auth submit triggered');
   const isRegister = document.getElementById('registerTabBtn').classList.contains('active');
   const email = document.getElementById('authEmail').value;
   const password = document.getElementById('authPassword').value;
 
   const endpoint = isRegister ? `${API_BASE}/api/auth/register` : `${API_BASE}/api/auth/login`;
+  console.log('Calling endpoint:', endpoint);
+
   const bodyData = isRegister ? {
     name: document.getElementById('authName').value,
     company: document.getElementById('authCompany').value,
@@ -398,15 +401,18 @@ async function handleAuthSubmit(e) {
 
     const data = await res.json();
     if (res.ok) {
+      console.log('Auth success:', data);
       authToken = data.token;
       localStorage.setItem('saf_token', authToken);
       currentUser = data.user;
       updateAuthUI();
       loadCustomerPortal();
     } else {
+      console.error('Auth failed:', data.error);
       alert(data.error || 'Authentication failed');
     }
   } catch (err) {
+    console.error('Network error during auth:', err);
     alert('Server error during auth.');
   }
 }

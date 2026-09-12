@@ -97,6 +97,12 @@ function renderProductGrid(products) {
       <div class="product-body">
         <h3 class="product-name">${p.name}</h3>
         <div class="product-specs">${p.specs}</div>
+
+        <div class="qty-selector-catalog">
+          <label for="qty-${p.id}">Quantity:</label>
+          <input type="number" id="qty-${p.id}" value="1" min="1" max="${p.inStock}" class="form-input qty-input-small">
+        </div>
+
         <div class="product-prices">
           <div>
             <span style="font-size:0.75rem; color:var(--text-muted); display:block;">OUTRIGHT PURCHASE</span>
@@ -108,12 +114,26 @@ function renderProductGrid(products) {
           </div>
         </div>
         <div class="card-actions">
-          <button class="btn btn-accent" onclick="addToCart('${p.id}', 1, 'sale')">Buy $${p.salePrice.toFixed(2)}</button>
-          <button class="btn btn-primary" onclick="addToCart('${p.id}', 1, 'rental')">Rent $${p.rentalPriceMonthly.toFixed(2)}</button>
+          <button class="btn btn-accent" onclick="handleAddToCartFromCatalog('${p.id}', 'sale')">Buy Now</button>
+          <button class="btn btn-primary" onclick="handleAddToCartFromCatalog('${p.id}', 'rental')">Rent Now</button>
         </div>
       </div>
     </div>
   `).join('');
+}
+
+// Add to Cart from Catalog with Quantity
+function handleAddToCartFromCatalog(productId, orderType) {
+  const qtyInput = document.getElementById(`qty-${productId}`);
+  const qty = parseInt(qtyInput.value) || 1;
+
+  if (qty <= 0) {
+    alert('Please enter a valid quantity.');
+    return;
+  }
+
+  addToCart(productId, qty, orderType);
+  openCartModal();
 }
 
 // Filter Catalog Categories

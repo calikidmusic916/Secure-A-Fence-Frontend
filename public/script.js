@@ -347,6 +347,12 @@ async function submitCheckout() {
     return;
   }
 
+  const agreeCheckbox = document.getElementById('checkoutAgreeTerms');
+  if (agreeCheckbox && !agreeCheckbox.checked) {
+    alert('You must read and agree to the Rental Agreement & Terms before placing your order.');
+    return;
+  }
+
   if (!authToken) {
     alert('Please sign in or create a customer account to complete your order.');
     closeCartModal();

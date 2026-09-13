@@ -337,6 +337,13 @@ body {
   color: #fff;
 }
 
+.product-description {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+  line-height: 1.4;
+}
+
 .product-specs {
   font-size: 0.8rem;
   color: var(--text-muted);

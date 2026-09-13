@@ -61,7 +61,9 @@ function switchView(viewId) {
   if (navBtn) navBtn.classList.add('active');
 
   // Trigger view specific loads
-  if (viewId === 'portal-view') {
+  if (viewId === 'store-view' || viewId === 'purchases-view') {
+    fetchProducts();
+  } else if (viewId === 'portal-view') {
     loadCustomerPortal();
   } else if (viewId === 'admin-view') {
     loadAdminDashboard();
@@ -70,25 +72,32 @@ function switchView(viewId) {
 
 // Fetch Product Catalog from REST API
 async function fetchProducts() {
-  const container = document.getElementById('productGridContainer');
-  if (container) container.innerHTML = `<p style="grid-column: 1/-1; text-align: center;">⌛ Loading products...</p>`;
+  const rentalContainer = document.getElementById('productGridContainer');
+  const purchaseContainer = document.getElementById('purchaseGridContainer');
+  if (rentalContainer) rentalContainer.innerHTML = `<p style="grid-column: 1/-1; text-align: center;">⌛ Loading products...</p>`;
+  if (purchaseContainer) purchaseContainer.innerHTML = `<p style="grid-column: 1/-1; text-align: center;">⌛ Loading products...</p>`;
 
   try {
     const res = await fetch(`${API_BASE}/api/products`);
     if (res.ok) {
       productsData = await res.json();
       renderProductGrid(productsData);
+      renderPurchaseGrid(productsData);
     } else {
       console.error('Failed to fetch products:', res.statusText);
-      if (container) container.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--warning);">❌ Error loading products: ${res.statusText}</p>`;
+      const errMsg = `<p style="grid-column: 1/-1; text-align: center; color: var(--warning);">❌ Error loading products: ${res.statusText}</p>`;
+      if (rentalContainer) rentalContainer.innerHTML = errMsg;
+      if (purchaseContainer) purchaseContainer.innerHTML = errMsg;
     }
   } catch (err) {
     console.error('Error fetching products:', err);
-    if (container) container.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--warning);">❌ Network Error: Could not connect to backend.</p>`;
+    const netErr = `<p style="grid-column: 1/-1; text-align: center; color: var(--warning);">❌ Network Error: Could not connect to backend.</p>`;
+    if (rentalContainer) rentalContainer.innerHTML = netErr;
+    if (purchaseContainer) purchaseContainer.innerHTML = netErr;
   }
 }
 
-// Render Product Grid
+// Render Fence Rentals Grid
 function renderProductGrid(products) {
   const container = document.getElementById('productGridContainer');
   if (!container) return;
@@ -105,6 +114,7 @@ function renderProductGrid(products) {
       </div>
       <div class="product-body">
         <h3 class="product-name">${p.name}</h3>
+        ${p.description ? `<p class="product-description">${p.description}</p>` : ''}
         <div class="product-specs">${p.specs}</div>
 
         <div class="product-prices" style="border-top: none; padding-top: 0; margin-bottom: 0.5rem;">
@@ -113,12 +123,63 @@ function renderProductGrid(products) {
             <span class="sale-price" style="font-size: 1rem; color: #fff;">Jobsite Rental</span>
           </div>
           <div style="text-align: right;">
-            <span style="font-size:0.75rem; color:var(--text-muted); display:block;">RATE</span>
+            <span style="font-size:0.75rem; color:var(--text-muted); display:block;">MONTHLY RATE</span>
             <span class="rental-price" style="font-weight:700; color:#38bdf8;">$${p.rentalPriceMonthly.toFixed(2)}${p.id.includes('linear') || p.id.includes('privacy') ? ' / LF / mo' : ' / mo'}</span>
           </div>
         </div>
-        <div class="card-actions" style="margin-top: auto;">
-          <button class="btn btn-primary" style="grid-column: 1 / -1;" onclick="switchView('calc-view')">Calculate My Project</button>
+
+        <div class="qty-selector-catalog" style="margin-top: auto;">
+          <span>Qty:</span>
+          <input type="number" id="qty-r-${p.id}" class="form-input qty-input-small" value="1" min="1">
+        </div>
+
+        <div class="card-actions" style="margin-top: 0.5rem;">
+          <button class="btn btn-outline" onclick="handleAddToCartFromCatalog('${p.id}', 'rental', 'qty-r-${p.id}')">Add Rental to Cart</button>
+          <button class="btn btn-primary" onclick="switchView('calc-view')">Fence Rental Quote</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// Render Fence Panel Purchases Grid
+function renderPurchaseGrid(products) {
+  const container = document.getElementById('purchaseGridContainer');
+  if (!container) return;
+
+  if (products.length === 0) {
+    container.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">No products found.</p>`;
+    return;
+  }
+
+  container.innerHTML = products.map(p => `
+    <div class="product-card">
+      <div class="product-img-wrapper">
+        <img src="${p.image.startsWith('/') ? API_BASE + p.image : p.image}" alt="${p.name}" class="product-img">
+      </div>
+      <div class="product-body">
+        <h3 class="product-name">${p.name}</h3>
+        ${p.description ? `<p class="product-description">${p.description}</p>` : ''}
+        <div class="product-specs">${p.specs}</div>
+
+        <div class="product-prices" style="border-top: none; padding-top: 0; margin-bottom: 0.5rem;">
+          <div>
+            <span style="font-size:0.75rem; color:var(--text-muted); display:block;">PURCHASE TYPE</span>
+            <span style="font-size: 0.9rem; color: #fff;">Outright Buy</span>
+          </div>
+          <div style="text-align: right;">
+            <span style="font-size:0.75rem; color:var(--text-muted); display:block;">UNIT PRICE</span>
+            <span class="sale-price" style="font-weight:800; color:var(--accent); font-size:1.2rem;">$${p.salePrice.toFixed(2)}</span>
+          </div>
+        </div>
+
+        <div class="qty-selector-catalog" style="margin-top: auto;">
+          <span>Qty:</span>
+          <input type="number" id="qty-p-${p.id}" class="form-input qty-input-small" value="1" min="1">
+        </div>
+
+        <div class="card-actions" style="margin-top: 0.5rem;">
+          <button class="btn btn-primary" style="grid-column: 1 / -1;" onclick="handleAddToCartFromCatalog('${p.id}', 'sale', 'qty-p-${p.id}')">🛒 Add Purchase to Cart</button>
         </div>
       </div>
     </div>
@@ -126,9 +187,10 @@ function renderProductGrid(products) {
 }
 
 // Add to Cart from Catalog with Quantity
-function handleAddToCartFromCatalog(productId, orderType) {
-  const qtyInput = document.getElementById(`qty-${productId}`);
-  const qty = parseInt(qtyInput.value) || 1;
+function handleAddToCartFromCatalog(productId, orderType, inputId = null) {
+  const elementId = inputId || `qty-${productId}`;
+  const qtyInput = document.getElementById(elementId);
+  const qty = qtyInput ? (parseInt(qtyInput.value) || 1) : 1;
 
   if (qty <= 0) {
     alert('Please enter a valid quantity.');
@@ -139,9 +201,12 @@ function handleAddToCartFromCatalog(productId, orderType) {
   openCartModal();
 }
 
-// Filter Catalog Categories
+// Filter Rentals Catalog Categories
 function filterCatalog(category) {
-  document.querySelectorAll('.filter-chip').forEach(chip => chip.classList.remove('active'));
+  const section = document.getElementById('store-view');
+  if (section) {
+    section.querySelectorAll('.filter-chip').forEach(chip => chip.classList.remove('active'));
+  }
   if (event && event.target) event.target.classList.add('active');
 
   if (category === 'all') {
@@ -149,6 +214,22 @@ function filterCatalog(category) {
   } else {
     const filtered = productsData.filter(p => p.type === category);
     renderProductGrid(filtered);
+  }
+}
+
+// Filter Purchases Catalog Categories
+function filterPurchaseCatalog(category) {
+  const section = document.getElementById('purchases-view');
+  if (section) {
+    section.querySelectorAll('.filter-chip').forEach(chip => chip.classList.remove('active'));
+  }
+  if (event && event.target) event.target.classList.add('active');
+
+  if (category === 'all') {
+    renderPurchaseGrid(productsData);
+  } else {
+    const filtered = productsData.filter(p => p.type === category);
+    renderPurchaseGrid(filtered);
   }
 }
 
@@ -189,6 +270,16 @@ function runCalculator() {
   const panelsCount = Math.ceil(L / 10);
   const standsCount = panelsCount > 0 ? panelsCount + 1 : 0;
   const clipsCount = panelsCount;
+
+  const quoteProductImg = document.getElementById('quoteProductImg');
+  if (quoteProductImg) {
+    const mainPanel = productsData.find(p => p.type === 'panel');
+    let imgSrc = mainPanel && mainPanel.image ? (mainPanel.image.startsWith('/') ? API_BASE + mainPanel.image : mainPanel.image) : 'assets/panel.svg';
+    if (P) {
+      imgSrc = 'assets/privacy_screen.svg';
+    }
+    quoteProductImg.src = imgSrc;
+  }
 
   if (document.getElementById('resPanelsCount')) {
     document.getElementById('resPanelsCount').innerText = `${panelsCount} Panels`;

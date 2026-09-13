@@ -16,8 +16,9 @@
       </a>
       <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰ Menu</button>
       <ul class="nav-links" id="navLinksList">
-        <li><button class="nav-btn active" onclick="switchView('store-view')">🏷️ Store &amp; Products</button></li>
-        <li><button class="nav-btn" onclick="switchView('calc-view')">📐 Fence Calculator</button></li>
+        <li><button class="nav-btn active" onclick="switchView('store-view')">🏷️ Fence Rentals</button></li>
+        <li><button class="nav-btn" onclick="switchView('purchases-view')">🛒 Fence Purchases</button></li>
+        <li><button class="nav-btn" onclick="switchView('calc-view')">📐 Rental Calculator</button></li>
         <li><button class="nav-btn" onclick="switchView('delivery-view')">🚚 Delivery Info</button></li>
         <li><button class="nav-btn" onclick="switchView('portal-view')" id="portalNavBtn">👤 Customer Portal</button></li>
         <li id="adminNavLi" style="display: none;"><button class="nav-btn admin-nav-btn" onclick="switchView('admin-view')">🛡️ Admin Management</button></li>
@@ -34,40 +35,22 @@
   <section class="hero">
     <div class="hero-content">
       <h1>Secure Jobsite &amp; Temporary Fence Solutions</h1>
-      <p>High-Quality Refurbished Fence Panels, Heavy-Duty Bases &amp; Couplers for Immediate Sale or Rental</p>
-      <div class="pricing-highlights">
-        <div class="price-pill">
-          <span>Refurbished Panels:</span>
-          <span class="amount">$65.00 / panel</span>
-        </div>
-        <div class="price-pill">
-          <span>Heavy Bases:</span>
-          <span class="amount">$10.00 / stand</span>
-        </div>
-        <div class="price-pill">
-          <span>Safety Clips:</span>
-          <span class="amount">$5.00 / clip</span>
-        </div>
-        <div class="price-pill">
-          <span>Monthly Rental Rate:</span>
-          <span class="amount">$15.00 / mo</span>
-        </div>
-      </div>
+      <p>High-Quality Temporary Fence Equipment for Immediate Sale or Rental</p>
     </div>
   </section>
 
   <!-- Main View Area -->
   <main class="main-container">
 
-    <!-- PAGE VIEW 1: STORE & CATALOG -->
+    <!-- PAGE VIEW 1: FENCE RENTALS CATALOG -->
     <section id="store-view" class="page-view active">
       <div class="section-header">
-        <h2 class="section-title">Product Catalog</h2>
+        <h2 class="section-title">Fence Rentals Catalog</h2>
         <div class="filter-bar">
           <button class="filter-chip active" onclick="filterCatalog('all')">All Products</button>
-          <button class="filter-chip" onclick="filterCatalog('panel')">Panels ($65 Buy / $15 Rent)</button>
-          <button class="filter-chip" onclick="filterCatalog('stand')">Stands ($10)</button>
-          <button class="filter-chip" onclick="filterCatalog('clip')">Clips ($5)</button>
+          <button class="filter-chip" onclick="filterCatalog('panel')">Panels</button>
+          <button class="filter-chip" onclick="filterCatalog('stand')">Stands</button>
+          <button class="filter-chip" onclick="filterCatalog('clip')">Clips</button>
           <button class="filter-chip" onclick="filterCatalog('gate')">Custom Gates &amp; Doors</button>
           <button class="filter-chip" onclick="filterCatalog('accessory')">Accessories</button>
         </div>
@@ -75,6 +58,25 @@
       <div class="product-grid" id="productGridContainer">
         <!-- Loaded via JavaScript -->
       </div>
+    </section>
+
+    <!-- PAGE VIEW 1B: FENCE PANEL PURCHASES CATALOG -->
+    <section id="purchases-view" class="page-view">
+      <div class="section-header">
+        <h2 class="section-title">Fence Panel Purchases Catalog</h2>
+        <div class="filter-bar">
+          <button class="filter-chip active" onclick="filterPurchaseCatalog('all')">All Products</button>
+          <button class="filter-chip" onclick="filterPurchaseCatalog('panel')">Panels</button>
+          <button class="filter-chip" onclick="filterPurchaseCatalog('stand')">Stands</button>
+          <button class="filter-chip" onclick="filterPurchaseCatalog('clip')">Clips</button>
+          <button class="filter-chip" onclick="filterPurchaseCatalog('gate')">Custom Gates &amp; Doors</button>
+          <button class="filter-chip" onclick="filterPurchaseCatalog('accessory')">Accessories</button>
+        </div>
+      </div>
+      <div class="product-grid" id="purchaseGridContainer">
+        <!-- Loaded via JavaScript -->
+      </div>
+    </section>
 
       <!-- CUSTOMER PROJECTS SECTION -->
       <h2 class="section-title" style="margin-top: 3.5rem; border-top: 1px solid var(--border); padding-top: 2rem;">🛠️ Creative Temporary Fence Projects &amp; Uses</h2>
@@ -130,10 +132,10 @@
       </div>
     </section>
 
-    <!-- PAGE VIEW 2: INTERACTIVE FENCE CALCULATOR -->
+    <!-- PAGE VIEW 2: INTERACTIVE FENCE RENTAL -->
     <section id="calc-view" class="page-view">
       <div class="section-header">
-        <h2 class="section-title">Fence Perimeter &amp; Package Calculator</h2>
+        <h2 class="section-title">Fence Rental</h2>
       </div>
       <div class="calc-card">
         <div class="calc-grid">
@@ -142,6 +144,18 @@
             <p style="color: var(--text-muted); margin-bottom: 1.25rem; font-size: 0.9rem;">
               Enter your project details to instantly calculate your estimated rental costs, including labor and delivery.
             </p>
+
+            <!-- Product Image Preview for Rented Equipment -->
+            <div class="quote-product-preview" style="background: var(--bg-dark); border: 1px solid var(--border); border-radius: 0.75rem; padding: 1rem; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 1rem;">
+              <div style="width: 80px; height: 80px; min-width: 80px; background: #020617; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; padding: 0.5rem; border: 1px solid var(--border);">
+                <img id="quoteProductImg" src="assets/panel.svg" alt="Rented Equipment" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+              </div>
+              <div>
+                <span style="font-size: 0.75rem; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; display: block;">Rented Equipment</span>
+                <h4 id="quoteProductName" style="color: #fff; margin: 0.2rem 0; font-size: 0.95rem;">6' x 12' Temporary Chain-Link Fence Panel</h4>
+                <p id="quoteProductSub" style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">Includes Heavy Bases, Coupler Clips &amp; Delivery</p>
+              </div>
+            </div>
             <div class="form-group">
               <label class="form-label">Linear Feet Needed (L)</label>
               <input type="number" id="calcLinearFeet" class="form-input" value="500" placeholder="e.g. 500" oninput="runCalculator()">

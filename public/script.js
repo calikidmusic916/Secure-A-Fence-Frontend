@@ -966,8 +966,8 @@ async function loadAdminDashboard() {
       const { metrics } = await resOverview.json();
       document.getElementById('adminMetricSalesRev').innerText = `$${metrics.totalSalesRevenue.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
       document.getElementById('adminMetricRentalRev').innerText = `$${metrics.monthlyRentalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2 })} / mo`;
-      document.getElementById('adminMetricPanelsRented').innerText = `${metrics.totalPanelsRentedOut} Panels`;
-      document.getElementById('adminMetricWarehouseStock').innerText = `${metrics.panelsInWarehouse} Panels`;
+      document.getElementById('adminMetricPanelsRented').innerText = `${metrics.totalPanelsRentedOut} LF`;
+      document.getElementById('adminMetricWarehouseStock').innerText = `${metrics.panelsInWarehouse} LF`;
     }
 
     // Load All Admin Tables
@@ -1536,7 +1536,7 @@ async function loadAdminProductsTable() {
             <small style="color: var(--text-muted);">${p.id}</small>
           </td>
           <td>${p.type.toUpperCase()}</td>
-          <td>${p.inStock} units</td>
+          <td><strong>${p.inStock}</strong> ${p.unit || (p.type === 'panel' || p.type === 'accessory' ? 'LF' : 'units')}</td>
           <td>
             Buy: $${p.salePrice.toFixed(2)}<br>
             Rent: $${p.rentalPriceMonthly.toFixed(2)}

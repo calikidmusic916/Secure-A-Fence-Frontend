@@ -1178,6 +1178,61 @@ function closeShipmentMapModal() {
   modal.classList.remove('active');
 }
 
+function toggleAllShipmentChecks() {
+  const master = document.getElementById('selectAllShipments');
+  if (!master) return;
+  const checkboxes = document.querySelectorAll('.shipment-check');
+  checkboxes.forEach(cb => cb.checked = master.checked);
+}
+
+async function optimizeShipmentRoute() {
+  const checkedBoxes = Array.from(document.querySelectorAll('.shipment-check:checked')).map(cb => cb.value);
+  if (checkedBoxes.length === 0) {
+    alert('Please select at least one shipment using the checkboxes to optimize delivery route.');
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/dispatch/optimize`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`
+      },
+      body: JSON.stringify({ shipmentIds: checkedBoxes })
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      const summaryBox = document.getElementById('routeOptimizationSummary');
+      const statsBox = document.getElementById('routeSummaryStats');
+      const stopsBox = document.getElementById('routeStopsList');
+
+      if (summaryBox) summaryBox.style.display = 'block';
+      if (statsBox) {
+        statsBox.innerHTML = `<strong>Total Stops:</strong> ${data.summary.totalStops} | <strong>Est. Distance:</strong> ${data.summary.estimatedTotalMiles} miles | <strong>Est. Time:</strong> ${data.summary.estimatedTotalDriveTime}`;
+      }
+      if (stopsBox) {
+        stopsBox.innerHTML = data.route.map((stop, idx) => `
+          <div style="background: var(--bg-card); padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <strong>Stop #${idx + 1}: ${stop.id} (${stop.type})</strong><br>
+              <span style="font-size: 0.85rem; color: var(--text-muted);">${stop.destination}</span>
+            </div>
+            <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stop.destination)}" target="_blank" class="btn btn-accent" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; text-decoration: none;">📍 Google Map Nav</a>
+          </div>
+        `).join('');
+      }
+      alert('🚚 Route sequence optimized successfully!');
+    } else {
+      const errData = await res.json();
+      alert('Optimization error: ' + (errData.error || 'Failed'));
+    }
+  } catch (e) {
+    alert('Error connecting to route optimization engine.');
+  }
+}
+
 async function updateShipmentPrompt(shipmentId) {
   const s = adminShipmentsData.find(item => item.id === shipmentId);
   if (!s) return;
@@ -1336,7 +1391,9 @@ async function deleteShipmentRecord(shipmentId) {
 
 // Custom Gate & Door Designer Logic
 function updateGateDesigner() {
-  const style = document.getElementById('gateStyle').value;
+  const gateStyleElem = document.getElementById('gateStyle');
+  if (!gateStyleElem) return;
+  const style = gateStyleElem.value;
   const hardwareGroup = document.getElementById('gateHardwareGroup');
   const qtyGroup = document.getElementById('gateQtyGroup');
   const orderTypeGroup = document.getElementById('gateOrderTypeGroup');
@@ -1357,11 +1414,11 @@ function updateGateDesigner() {
   if (orderTypeGroup) orderTypeGroup.style.display = 'block';
   if (resultsBox) resultsBox.style.display = 'block';
 
-  const orderType = document.getElementById('gateOrderType').value;
-  const qty = parseInt(document.getElementById('gateQuantity').value) || 1;
-  const usePadlock = document.getElementById('gatePadlockLatch').checked;
-  const useDropRod = document.getElementById('gateDropRod').checked;
-  const useWheel = document.getElementById('gateWheel').checked;
+  const orderType = document.getElementById('gateOrderType')?.value || 'sale';
+  const qty = parseInt(document.getElementById('gateQuantity')?.value) || 1;
+  const usePadlock = document.getElementById('gatePadlockLatch')?.checked || false;
+  const useDropRod = document.getElementById('gateDropRod')?.checked || false;
+  const useWheel = document.getElementById('gateWheel')?.checked || false;
 
   const gateProdId = style === 'pedestrian' ? 'prod-gate-pedestrian' : (style === 'single-swing' ? 'prod-gate-single' : 'prod-gate-double');
   const gateProd = productsData.find(p => p.id === gateProdId);
@@ -1414,12 +1471,14 @@ function updateGateDesigner() {
 }
 
 function addCustomGateToCart() {
-  const style = document.getElementById('gateStyle').value;
-  const orderType = document.getElementById('gateOrderType').value;
-  const qty = parseInt(document.getElementById('gateQuantity').value) || 1;
-  const usePadlock = document.getElementById('gatePadlockLatch').checked;
-  const useDropRod = document.getElementById('gateDropRod').checked;
-  const useWheel = document.getElementById('gateWheel').checked;
+  const gateStyleElem = document.getElementById('gateStyle');
+  if (!gateStyleElem) return;
+  const style = gateStyleElem.value;
+  const orderType = document.getElementById('gateOrderType')?.value || 'sale';
+  const qty = parseInt(document.getElementById('gateQuantity')?.value) || 1;
+  const usePadlock = document.getElementById('gatePadlockLatch')?.checked || false;
+  const useDropRod = document.getElementById('gateDropRod')?.checked || false;
+  const useWheel = document.getElementById('gateWheel')?.checked || false;
 
   const gateProdId = style === 'pedestrian' ? 'prod-gate-pedestrian' : (style === 'single-swing' ? 'prod-gate-single' : 'prod-gate-double');
   

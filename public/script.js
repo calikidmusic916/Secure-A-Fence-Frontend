@@ -1062,26 +1062,89 @@ async function updateOrderStatus(orderId, status) {
   }
 }
 
+let adminShipmentsData = [];
+
 async function loadAdminShipmentsTable() {
   const res = await fetch(`${API_BASE}/api/admin/shipments`, {
     headers: { 'Authorization': `Bearer ${authToken}` }
   });
 
   if (res.ok) {
-    const shipments = await res.json();
+    adminShipmentsData = await res.json();
     const tbody = document.getElementById('adminShipmentsTableBody');
+    if (!tbody) return;
 
-    tbody.innerHTML = shipments.map(s => `
+    tbody.innerHTML = adminShipmentsData.map(s => `
       <tr>
+        <td><input type="checkbox" class="shipment-check" value="${s.id}"></td>
         <td><strong>${s.id}</strong></td>
         <td><span style="color:var(--accent); font-weight:bold;">${s.type}</span></td>
         <td>${s.orderId}</td>
-        <td>${s.driverName}</td>
+        <td>${s.driverName || 'Unassigned'}</td>
         <td>${s.dispatchDate}</td>
         <td>${s.destination}</td>
         <td><span class="status-badge status-${s.status.toLowerCase().replace(/\s+/g, '')}">${s.status}</span></td>
+        <td>
+          <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+            <button class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;" onclick="updateShipmentPrompt('${s.id}')">✏️ Edit</button>
+            <button class="btn btn-danger" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; background: var(--warning); color: #fff;" onclick="deleteShipmentRecord('${s.id}')">Delete</button>
+          </div>
+        </td>
       </tr>
     `).join('');
+  }
+}
+
+async function updateShipmentPrompt(shipmentId) {
+  const s = adminShipmentsData.find(item => item.id === shipmentId);
+  if (!s) return;
+
+  const driver = prompt('Assign Driver / Fleet Truck:', s.driverName || 'Truck 1 - Mike');
+  if (driver === null) return;
+
+  const status = prompt('Update Dispatch Status (Scheduled, In Route, Delivered, Returned):', s.status || 'Scheduled');
+  if (status === null) return;
+
+  const notes = prompt('Update Delivery / Access Notes:', s.notes || '');
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/shipments/${shipmentId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`
+      },
+      body: JSON.stringify({ driverName: driver, status, notes })
+    });
+
+    if (res.ok) {
+      alert('Shipment record updated!');
+      loadAdminShipmentsTable();
+    } else {
+      alert('Failed to update shipment.');
+    }
+  } catch (e) {
+    alert('Error updating shipment.');
+  }
+}
+
+async function deleteShipmentRecord(shipmentId) {
+  if (!confirm('Are you sure you want to PERMANENTLY delete this shipment record?')) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/shipments/${shipmentId}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${authToken}` }
+    });
+
+    if (res.ok) {
+      alert('Shipment record deleted.');
+      loadAdminShipmentsTable();
+    } else {
+      alert('Failed to delete shipment.');
+    }
+  } catch (e) {
+    alert('Error deleting shipment record.');
   }
 }
 

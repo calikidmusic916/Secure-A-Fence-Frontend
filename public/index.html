@@ -138,48 +138,47 @@
       <div class="calc-card">
         <div class="calc-grid">
           <div>
-            <h3>Jobsite Perimeter Input</h3>
+            <h3>Jobsite Rental Quote Input</h3>
             <p style="color: var(--text-muted); margin-bottom: 1.25rem; font-size: 0.9rem;">
-              Enter the total linear footage required for your project perimeter. We automatically calculate the exact quantity of 10ft panels, stands, and clips required.
+              Enter your project details to instantly calculate your estimated rental costs, including labor and delivery.
             </p>
             <div class="form-group">
-              <label class="form-label">Total Linear Feet Needed</label>
-              <input type="number" id="calcLinearFeet" class="form-input" value="200" placeholder="e.g. 200" oninput="runCalculator()">
+              <label class="form-label">Linear Feet Needed (L)</label>
+              <input type="number" id="calcLinearFeet" class="form-input" value="500" placeholder="e.g. 500" oninput="runCalculator()">
             </div>
             <div class="form-group">
-              <label class="form-label">Panel Standard Length</label>
-              <select id="calcPanelWidth" class="form-select" onchange="runCalculator()">
-                <option value="10" selected>10 Foot Standard Panel (6' High x 10' Wide)</option>
-                <option value="12">12 Foot Heavy-Duty Panel (6' High x 12' Wide)</option>
+              <label class="form-label">Estimated Rental Duration (Months)</label>
+              <input type="number" id="calcMonths" class="form-input" value="3" min="1" oninput="runCalculator()">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Number of Pedestrian Gates (G)</label>
+              <input type="number" id="calcGates" class="form-input" value="1" min="0" oninput="runCalculator()">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Delivery Zone (D)</label>
+              <select id="calcDeliveryZone" class="form-select" onchange="runCalculator()">
+                <option value="125">Local (Zone 1) = $125</option>
+                <option value="200">Regional (Zone 2) = $200</option>
               </select>
             </div>
             <div class="form-group">
-              <label><input type="checkbox" id="calcIncludeStands" checked onchange="runCalculator()"> Include Base Stands ($10 ea buy / $3 mo rent)</label>
-            </div>
-            <div class="form-group">
-              <label><input type="checkbox" id="calcIncludeClips" checked onchange="runCalculator()"> Include Connector Clips ($5 ea buy / $1 mo rent)</label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: #fff;">
+                <input type="checkbox" id="calcPrivacy" checked onchange="runCalculator()"> Add Privacy Screen?
+              </label>
             </div>
           </div>
 
           <div>
-            <h3>Calculated Items &amp; Cost Estimate</h3>
+            <h3>Your Secure A Fence Estimate</h3>
             <div class="calc-results" id="calcResultsBox">
-              <div class="result-item"><span>Panels Needed:</span><strong id="resPanels">20 Panels</strong></div>
-              <div class="result-item"><span>Stands / Bases Needed:</span><strong id="resStands">21 Stands</strong></div>
-              <div class="result-item"><span>Clips / Couplers Needed:</span><strong id="resClips">20 Clips</strong></div>
+              <div class="result-item"><span>One-Time Setup (Delivery, Install, Removal):</span><strong id="resSetupTotal">$295.00</strong></div>
+              <div class="result-item"><span>Recurring Monthly Rate:</span><strong id="resMonthlyTotal">$865.00 / month</strong></div>
               
-              <div class="comparison-box">
+              <div class="comparison-box" style="grid-template-columns: 1fr;">
                 <div class="option-card highlight">
-                  <div class="option-title">Buy Outright</div>
-                  <div class="option-price" id="resBuyTotal">$1,610.00</div>
-                  <small style="color: var(--text-muted);">$65/panel + $10/stand + $5/clip</small>
-                  <button class="btn btn-accent" style="width: 100%; margin-top: 0.75rem;" onclick="addPackageToCart('sale')">Add Purchase Package</button>
-                </div>
-                <div class="option-card">
-                  <div class="option-title">Rent Monthly</div>
-                  <div class="option-price" id="resRentTotal">$380.00 / mo</div>
-                  <small style="color: var(--text-muted);">$15/mo panel + $3/mo stand + $1/mo clip</small>
-                  <button class="btn btn-primary" style="width: 100%; margin-top: 0.75rem;" onclick="addPackageToCart('rental')">Add Rental Package</button>
+                  <div class="option-title">Total Estimated Cost (for <span id="resMonthsSpan">3</span> months)</div>
+                  <div class="option-price" id="resGrandTotal">$2,890.00</div>
+                  <button class="btn btn-accent" style="width: 100%; margin-top: 0.75rem;" onclick="submitRentalQuote()">Request Contract &amp; Secure Delivery Date</button>
                 </div>
               </div>
             </div>

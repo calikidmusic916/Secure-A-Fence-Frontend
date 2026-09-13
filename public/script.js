@@ -11,6 +11,8 @@ console.log('Connecting to Backend at:', API_BASE);
 // Global State Variables
 let productsData = [];
 let cart = []; // Array of { productId, quantity }
+let isQuoteMode = false;
+let quoteData = null;
 let currentUser = null;
 let authToken = localStorage.getItem('saf_token') || null;
 
@@ -159,47 +161,58 @@ function filterCatalog(category) {
 
 // Interactive Fence Calculator
 function runCalculator() {
-  const linearFeet = parseFloat(document.getElementById('calcLinearFeet').value) || 0;
-  const panelWidth = parseFloat(document.getElementById('calcPanelWidth').value) || 10;
-  const includeStands = document.getElementById('calcIncludeStands').checked;
-  const includeClips = document.getElementById('calcIncludeClips').checked;
+  const L = parseFloat(document.getElementById('calcLinearFeet').value) || 0;
+  const M = parseInt(document.getElementById('calcMonths').value) || 1;
+  const P = document.getElementById('calcPrivacy').checked ? 1 : 0;
+  const G = parseInt(document.getElementById('calcGates').value) || 0;
+  const D = parseFloat(document.getElementById('calcDeliveryZone').value) || 125;
 
-  if (linearFeet <= 0) return;
+  if (L <= 0) {
+    document.getElementById('resSetupTotal').innerText = '$0.00';
+    document.getElementById('resMonthlyTotal').innerText = '$0.00 / month';
+    document.getElementById('resGrandTotal').innerText = '$0.00';
+    return;
+  }
 
-  const panelsNeeded = Math.ceil(linearFeet / panelWidth);
-  const standsNeeded = includeStands ? panelsNeeded + 1 : 0;
-  const clipsNeeded = includeClips ? panelsNeeded : 0;
+  // Recurring Monthly Variables
+  const monthlyFence = L * 1.35;
+  const monthlyPrivacy = L * 0.33 * P;
+  const monthlyGate = G * 25.00;
+  const totalMonthly = monthlyFence + monthlyPrivacy + monthlyGate;
 
-  // Exact Prices requested: $65 panel, $10 stand, $5 clip
-  const buyTotal = (panelsNeeded * 65.00) + (standsNeeded * 10.00) + (clipsNeeded * 5.00);
-  const rentTotal = (panelsNeeded * 15.00) + (standsNeeded * 3.00) + (clipsNeeded * 1.00);
+  // One-Time Variables
+  const installLabor = L * 0.17;
+  const removalLabor = L * 0.17;
+  const totalLabor = installLabor + removalLabor;
+  const setupTotal = totalLabor + D;
 
-  document.getElementById('resPanels').innerText = `${panelsNeeded} Panels (${panelWidth}' x 6')`;
-  document.getElementById('resStands').innerText = `${standsNeeded} Heavy Base Stands`;
-  document.getElementById('resClips').innerText = `${clipsNeeded} Safety Connector Clips`;
-  document.getElementById('resBuyTotal').innerText = `$${buyTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
-  document.getElementById('resRentTotal').innerText = `$${rentTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })} / mo`;
+  // Grand Total Formula
+  let rawTotal = (totalMonthly * M) + setupTotal;
+
+  // Minimum Order Logic
+  const finalTotal = rawTotal < 300 ? 300 : rawTotal;
+
+  document.getElementById('resSetupTotal').innerText = `$${setupTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  document.getElementById('resMonthlyTotal').innerText = `$${totalMonthly.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / month`;
+  document.getElementById('resMonthsSpan').innerText = M;
+  document.getElementById('resGrandTotal').innerText = `$${finalTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+  quoteData = {
+    linearFeet: L,
+    months: M,
+    privacy: P,
+    gates: G,
+    delivery: D,
+    totalMonthly,
+    setupTotal,
+    finalTotal
+  };
 }
 
-// Add Package from Calculator to Cart
-function addPackageToCart(orderType) {
-  const linearFeet = parseFloat(document.getElementById('calcLinearFeet').value) || 200;
-  const panelWidth = parseFloat(document.getElementById('calcPanelWidth').value) || 10;
-  const includeStands = document.getElementById('calcIncludeStands').checked;
-  const includeClips = document.getElementById('calcIncludeClips').checked;
-
-  const panelsNeeded = Math.ceil(linearFeet / panelWidth);
-  const standsNeeded = includeStands ? panelsNeeded + 1 : 0;
-  const clipsNeeded = includeClips ? panelsNeeded : 0;
-
-  const panelProd = productsData.find(p => p.type === 'panel') || { id: 'prod-panel-sale' };
-  const standProd = productsData.find(p => p.type === 'stand') || { id: 'prod-stand-sale' };
-  const clipProd = productsData.find(p => p.type === 'clip') || { id: 'prod-clip-sale' };
-
-  addToCart(panelProd.id, panelsNeeded, orderType);
-  if (standsNeeded > 0) addToCart(standProd.id, standsNeeded, orderType);
-  if (clipsNeeded > 0) addToCart(clipProd.id, clipsNeeded, orderType);
-
+// Request Contract / Quote
+function submitRentalQuote() {
+  if (!quoteData) return;
+  isQuoteMode = true;
   openCartModal();
 }
 
@@ -230,12 +243,38 @@ function openCartModal() {
 }
 
 function closeCartModal() {
+  isQuoteMode = false;
   document.getElementById('cartModal').classList.remove('active');
 }
 
 function renderCartModal() {
   const container = document.getElementById('cartItemsList');
   const orderType = document.getElementById('cartOrderType').value;
+
+  if (isQuoteMode && quoteData) {
+    document.getElementById('cartOrderType').value = 'rental';
+    document.getElementById('cartOrderType').disabled = true;
+
+    container.innerHTML = `
+      <div class="cart-item" style="display: block;">
+        <div style="font-weight: bold; color: var(--accent); margin-bottom: 0.5rem;">Custom Jobsite Rental Quote</div>
+        <ul style="color: var(--text-muted); font-size: 0.9rem; padding-left: 1.5rem; margin-bottom: 1rem;">
+          <li>${quoteData.linearFeet} Linear Feet of Fence</li>
+          <li>${quoteData.months} Month Estimated Duration</li>
+          <li>${quoteData.gates} Pedestrian Gate(s)</li>
+          <li>Privacy Screen: ${quoteData.privacy ? 'Yes' : 'No'}</li>
+        </ul>
+      </div>
+    `;
+
+    document.getElementById('cartSubtotalVal').innerText = `$${quoteData.finalTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+    document.getElementById('cartDeliveryFeeVal').innerText = 'Included in Quote';
+    document.getElementById('cartTaxVal').innerText = 'Calculated at Invoicing';
+    document.getElementById('cartTotalVal').innerText = `$${quoteData.finalTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+    return;
+  }
+
+  document.getElementById('cartOrderType').disabled = false;
 
   if (cart.length === 0) {
     container.innerHTML = `<p style="text-align: center; color: var(--text-muted); padding: 2rem 0;">Your shopping cart is currently empty.</p>`;
@@ -303,7 +342,7 @@ function changeCartQty(productId, delta) {
 
 // Checkout Submit
 async function submitCheckout() {
-  if (cart.length === 0) {
+  if (cart.length === 0 && !isQuoteMode) {
     alert('Your cart is empty.');
     return;
   }
@@ -321,6 +360,22 @@ async function submitCheckout() {
   const jobsiteContact = document.getElementById('checkoutContact').value;
   const startDate = document.getElementById('checkoutStartDate').value;
 
+  const payload = {
+    orderType,
+    deliveryAddress,
+    deliveryDistance,
+    jobsiteContact,
+    startDate
+  };
+
+  if (isQuoteMode && quoteData) {
+    payload.isCustomQuote = true;
+    payload.quoteData = quoteData;
+    payload.items = []; // Backend will populate this based on quoteData
+  } else {
+    payload.items = cart;
+  }
+
   try {
     const res = await fetch(`${API_BASE}/api/orders`, {
       method: 'POST',
@@ -328,14 +383,7 @@ async function submitCheckout() {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${authToken}`
       },
-      body: JSON.stringify({
-        orderType,
-        items: cart,
-        deliveryAddress,
-        deliveryDistance,
-        jobsiteContact,
-        startDate
-      })
+      body: JSON.stringify(payload)
     });
 
     const data = await res.json();
@@ -343,6 +391,7 @@ async function submitCheckout() {
     if (res.ok) {
       alert(`🎉 Order ${data.order.id} submitted successfully! Your invoice and delivery dispatch have been created.`);
       cart = [];
+      isQuoteMode = false;
       updateCartBadge();
       closeCartModal();
       fetchProducts(); // Refresh stock

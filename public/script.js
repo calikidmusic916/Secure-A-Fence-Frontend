@@ -1136,7 +1136,10 @@ function openRentalDetailsModal(rentalId) {
 
         <!-- SECTION 5: MONTHLY INVOICES LEDGER (DUE, PAID, OVERDUE) -->
         <div style="background: var(--bg-dark); border: 1px solid var(--border); padding: 1rem; border-radius: 0.75rem;">
-          <h4 style="color: var(--accent); margin-bottom: 0.5rem;">💵 Monthly Rental Invoices Ledger</h4>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <h4 style="color: var(--accent); margin: 0;">💵 Monthly Rental Invoices Ledger</h4>
+            <button class="btn btn-accent" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;" onclick="generateMonthlyRentalInvoice('${r.id}')">➕ Generate Monthly Invoice</button>
+          </div>
           ${invoices.length === 0 ? '<p style="color: var(--text-muted); font-size: 0.85rem;">No billing invoices generated yet for this rental agreement.</p>' : `
             <table class="data-table">
               <thead>
@@ -1178,6 +1181,7 @@ function openRentalDetailsModal(rentalId) {
   if (footer) {
     footer.innerHTML = `
       <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+        <button class="btn btn-accent" onclick="generateMonthlyRentalInvoice('${r.id}')">➕ Monthly Invoice</button>
         <button class="btn btn-outline" onclick="openRentalModal('${r.id}', 'extend')">📅 Extend Rental Date</button>
         <button class="btn btn-primary" onclick="openRentalModal('${r.id}', 'pickup')">🚚 Schedule Pickup Transport</button>
         ${r.status !== 'Returned' ? `<button class="btn btn-accent" onclick="checkinRental('${r.id}'); closeRentalDetailsModal();">📥 Check-In Equipment Return</button>` : ''}
@@ -1192,6 +1196,30 @@ function openRentalDetailsModal(rentalId) {
 function closeRentalDetailsModal() {
   const modal = document.getElementById('rentalDetailsModal');
   if (modal) modal.classList.remove('active');
+}
+
+async function generateMonthlyRentalInvoice(rentalId) {
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/rentals/${rentalId}/invoice`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      alert(`🎉 ${data.message} (${data.invoice.id})`);
+      loadAdminInvoicesTable();
+      loadAdminRentalsTable();
+      openRentalDetailsModal(rentalId);
+    } else {
+      alert('Failed to generate monthly invoice: ' + (data.error || 'Unknown error'));
+    }
+  } catch (e) {
+    alert('Error generating monthly rental invoice.');
+  }
 }
 
 async function checkinRental(rentalId) {

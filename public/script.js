@@ -1082,10 +1082,14 @@ async function loadAdminShipmentsTable() {
         <td>${s.orderId}</td>
         <td>${s.driverName || 'Unassigned'}</td>
         <td>${s.dispatchDate}</td>
-        <td>${s.destination}</td>
+        <td>
+          ${s.destination}<br>
+          <a href="javascript:void(0)" onclick="openShipmentMapModal('${encodeURIComponent(s.destination)}', '${s.id}')" style="color: var(--accent); font-size: 0.8rem; font-weight: bold; text-decoration: none;">📍 View Google Map</a>
+        </td>
         <td><span class="status-badge status-${s.status.toLowerCase().replace(/\s+/g, '')}">${s.status}</span></td>
         <td>
           <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+            <button class="btn btn-accent" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;" onclick="openShipmentMapModal('${encodeURIComponent(s.destination)}', '${s.id}')">🗺️ Map</button>
             <button class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;" onclick="updateShipmentPrompt('${s.id}')">✏️ Edit</button>
             <button class="btn btn-danger" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; background: var(--warning); color: #fff;" onclick="deleteShipmentRecord('${s.id}')">Delete</button>
           </div>
@@ -1093,6 +1097,33 @@ async function loadAdminShipmentsTable() {
       </tr>
     `).join('');
   }
+}
+
+function openShipmentMapModal(encodedDestination, shipmentId = '') {
+  const destination = decodeURIComponent(encodedDestination);
+  const modal = document.getElementById('shipmentMapModal');
+  const addressText = document.getElementById('shipmentMapAddressText');
+  const iframe = document.getElementById('shipmentMapIframe');
+  const externalLink = document.getElementById('googleMapsExternalLink');
+
+  if (addressText) {
+    addressText.innerHTML = `📍 Delivery Destination ${shipmentId ? '(' + shipmentId + ')' : ''}: <span style="color: #fff;">${destination}</span>`;
+  }
+
+  const mapUrl = `https://maps.google.com/maps?q=${encodeURIComponent(destination)}&output=embed`;
+  const externalUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(destination)}`;
+
+  if (iframe) iframe.src = mapUrl;
+  if (externalLink) externalLink.href = externalUrl;
+
+  modal.classList.add('active');
+}
+
+function closeShipmentMapModal() {
+  const modal = document.getElementById('shipmentMapModal');
+  const iframe = document.getElementById('shipmentMapIframe');
+  if (iframe) iframe.src = '';
+  modal.classList.remove('active');
 }
 
 async function updateShipmentPrompt(shipmentId) {

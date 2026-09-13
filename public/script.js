@@ -114,77 +114,97 @@ function renderProductGrid(products) {
     return;
   }
 
-  container.innerHTML = rentalProducts.map(p => `
-    <div class="product-card">
-      <div class="product-img-wrapper">
-        <img src="${resolveProductImgUrl(p.image)}" alt="${p.name}" class="product-img">
-      </div>
-      <div class="product-body">
-        <h3 class="product-name">${p.name}</h3>
-        ${p.description ? `<p class="product-description">${p.description}</p>` : ''}
-        <div class="product-specs">${p.specs}</div>
+  container.innerHTML = rentalProducts.map(p => {
+    const hasPrice = p.rentalPriceMonthly && parseFloat(p.rentalPriceMonthly) > 0;
 
-        <div class="product-prices" style="border-top: none; padding-top: 0; margin-bottom: 0.5rem;">
-          <div>
-            <span style="font-size:0.75rem; color:var(--text-muted); display:block;">SERVICE</span>
-            <span class="sale-price" style="font-size: 1rem; color: #fff;">Jobsite Rental</span>
-          </div>
-          <div style="text-align: right;">
-            <span style="font-size:0.75rem; color:var(--text-muted); display:block;">MONTHLY RATE</span>
-            <span class="rental-price" style="font-weight:700; color:#38bdf8;">$${p.rentalPriceMonthly.toFixed(2)}${p.id.includes('linear') || p.id.includes('privacy') ? ' / LF / mo' : ' / mo'}</span>
-          </div>
+    return `
+      <div class="product-card ${hasPrice ? '' : 'unavailable'}">
+        <div class="product-img-wrapper">
+          ${hasPrice ? '' : '<div class="unavailable-overlay-badge">✖ Not For Rent</div>'}
+          <img src="${resolveProductImgUrl(p.image)}" alt="${p.name}" class="product-img">
         </div>
+        <div class="product-body">
+          <h3 class="product-name">${p.name}</h3>
+          ${p.description ? `<p class="product-description">${p.description}</p>` : ''}
+          <div class="product-specs">${p.specs}</div>
 
-        <div class="card-actions" style="margin-top: auto;">
-          <button class="btn btn-primary" style="grid-column: 1 / -1; width: 100%;" onclick="switchView('calc-view')">Fence Rental Quote</button>
+          <div class="product-prices" style="border-top: none; padding-top: 0; margin-bottom: 0.5rem;">
+            <div>
+              <span style="font-size:0.75rem; color:var(--text-muted); display:block;">SERVICE</span>
+              <span class="sale-price" style="font-size: 1rem; color: #fff;">Jobsite Rental</span>
+            </div>
+            <div style="text-align: right;">
+              <span style="font-size:0.75rem; color:var(--text-muted); display:block;">MONTHLY RATE</span>
+              ${hasPrice ? `<span class="rental-price" style="font-weight:700; color:#38bdf8;">$${parseFloat(p.rentalPriceMonthly).toFixed(2)}${p.id.includes('linear') || p.id.includes('privacy') ? ' / LF / mo' : ' / mo'}</span>` : '<span style="color: #f87171; font-weight: 700; font-size: 0.9rem;">Unpriced</span>'}
+            </div>
+          </div>
+
+          ${hasPrice ? `
+            <div class="card-actions" style="margin-top: auto;">
+              <button class="btn btn-primary" style="grid-column: 1 / -1; width: 100%;" onclick="switchView('calc-view')">Fence Rental Quote</button>
+            </div>
+          ` : `
+            <div class="unavailable-banner">❌ Unavailable for Rental</div>
+          `}
         </div>
       </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 }
 
-// Render Fence Panel Purchases Grid
+// Render Fence Panel Purchases Grid (only products enabled for purchase catalog)
 function renderPurchaseGrid(products) {
   const container = document.getElementById('purchaseGridContainer');
   if (!container) return;
 
-  if (products.length === 0) {
-    container.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">No products found.</p>`;
+  const purchaseProducts = products.filter(p => p.isPurchase !== false);
+
+  if (purchaseProducts.length === 0) {
+    container.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">No purchase products found.</p>`;
     return;
   }
 
-  container.innerHTML = products.map(p => `
-    <div class="product-card">
-      <div class="product-img-wrapper">
-        <img src="${resolveProductImgUrl(p.image)}" alt="${p.name}" class="product-img">
-      </div>
-      <div class="product-body">
-        <h3 class="product-name">${p.name}</h3>
-        ${p.description ? `<p class="product-description">${p.description}</p>` : ''}
-        <div class="product-specs">${p.specs}</div>
+  container.innerHTML = purchaseProducts.map(p => {
+    const hasPrice = p.salePrice && parseFloat(p.salePrice) > 0;
 
-        <div class="product-prices" style="border-top: none; padding-top: 0; margin-bottom: 0.5rem;">
-          <div>
-            <span style="font-size:0.75rem; color:var(--text-muted); display:block;">PRICING</span>
-            <span style="font-size: 0.9rem; color: #fff; font-weight: 600;">Per Unit Purchase</span>
+    return `
+      <div class="product-card ${hasPrice ? '' : 'unavailable'}">
+        <div class="product-img-wrapper">
+          ${hasPrice ? '' : '<div class="unavailable-overlay-badge">✖ Not For Sale</div>'}
+          <img src="${resolveProductImgUrl(p.image)}" alt="${p.name}" class="product-img">
+        </div>
+        <div class="product-body">
+          <h3 class="product-name">${p.name}</h3>
+          ${p.description ? `<p class="product-description">${p.description}</p>` : ''}
+          <div class="product-specs">${p.specs}</div>
+
+          <div class="product-prices" style="border-top: none; padding-top: 0; margin-bottom: 0.5rem;">
+            <div>
+              <span style="font-size:0.75rem; color:var(--text-muted); display:block;">PRICING</span>
+              <span style="font-size: 0.9rem; color: #fff; font-weight: 600;">Per Unit Purchase</span>
+            </div>
+            <div style="text-align: right;">
+              <span style="font-size:0.75rem; color:var(--text-muted); display:block;">UNIT PRICE</span>
+              ${hasPrice ? `<span class="sale-price" style="font-weight:800; color:var(--accent); font-size:1.2rem;">$${parseFloat(p.salePrice).toFixed(2)} / unit</span>` : '<span style="color: #f87171; font-weight: 700; font-size: 0.9rem;">Unpriced</span>'}
+            </div>
           </div>
-          <div style="text-align: right;">
-            <span style="font-size:0.75rem; color:var(--text-muted); display:block;">UNIT PRICE</span>
-            <span class="sale-price" style="font-weight:800; color:var(--accent); font-size:1.2rem;">$${p.salePrice.toFixed(2)} / unit</span>
-          </div>
-        </div>
 
-        <div class="qty-selector-catalog" style="margin-top: auto;">
-          <span>Qty:</span>
-          <input type="number" id="qty-p-${p.id}" class="form-input qty-input-small" value="1" min="1">
-        </div>
+          ${hasPrice ? `
+            <div class="qty-selector-catalog" style="margin-top: auto;">
+              <span>Qty:</span>
+              <input type="number" id="qty-p-${p.id}" class="form-input qty-input-small" value="1" min="1">
+            </div>
 
-        <div class="card-actions" style="margin-top: 0.5rem;">
-          <button class="btn btn-primary" style="grid-column: 1 / -1;" onclick="handleAddToCartFromCatalog('${p.id}', 'sale', 'qty-p-${p.id}')">🛒 Add Purchase to Cart</button>
+            <div class="card-actions" style="margin-top: 0.5rem;">
+              <button class="btn btn-primary" style="grid-column: 1 / -1;" onclick="handleAddToCartFromCatalog('${p.id}', 'sale', 'qty-p-${p.id}')">🛒 Add Purchase to Cart</button>
+            </div>
+          ` : `
+            <div class="unavailable-banner">❌ Unavailable for Purchase</div>
+          `}
         </div>
       </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 }
 
 // Add to Cart from Catalog with Quantity
@@ -222,16 +242,18 @@ function filterCatalog(category) {
 
 // Filter Purchases Catalog Categories
 function filterPurchaseCatalog(category) {
-  const section = document.getElementById('purchases-view');
+  const section = document.getElementById('store-view');
   if (section) {
     section.querySelectorAll('.filter-chip').forEach(chip => chip.classList.remove('active'));
   }
   if (event && event.target) event.target.classList.add('active');
 
+  const purchaseProducts = productsData.filter(p => p.isPurchase !== false);
+
   if (category === 'all') {
-    renderPurchaseGrid(productsData);
+    renderPurchaseGrid(purchaseProducts);
   } else {
-    const filtered = productsData.filter(p => p.type === category);
+    const filtered = purchaseProducts.filter(p => p.type === category);
     renderPurchaseGrid(filtered);
   }
 }

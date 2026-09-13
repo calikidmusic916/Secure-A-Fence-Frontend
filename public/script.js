@@ -132,6 +132,13 @@ function renderProductGrid(products) {
 
   const rentalProducts = products.filter(p => p.isRental !== false && !p.suspended);
 
+  // Sort available priced items first, unpriced items last
+  rentalProducts.sort((a, b) => {
+    const priceA = a.rentalPriceMonthly && parseFloat(a.rentalPriceMonthly) > 0 ? 1 : 0;
+    const priceB = b.rentalPriceMonthly && parseFloat(b.rentalPriceMonthly) > 0 ? 1 : 0;
+    return priceB - priceA;
+  });
+
   if (rentalProducts.length === 0) {
     container.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">No rental products found.</p>`;
     return;
@@ -181,6 +188,13 @@ function renderPurchaseGrid(products) {
   if (!container) return;
 
   const purchaseProducts = products.filter(p => p.isPurchase !== false && !p.suspended);
+
+  // Sort available priced items first, unpriced items last
+  purchaseProducts.sort((a, b) => {
+    const priceA = a.salePrice && parseFloat(a.salePrice) > 0 ? 1 : 0;
+    const priceB = b.salePrice && parseFloat(b.salePrice) > 0 ? 1 : 0;
+    return priceB - priceA;
+  });
 
   if (purchaseProducts.length === 0) {
     container.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">No purchase products found.</p>`;

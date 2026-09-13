@@ -102,109 +102,91 @@ function resolveProductImgUrl(img) {
   return API_BASE + (img.startsWith('/') ? img : '/' + img);
 }
 
-// Render Fence Rentals Grid (only products enabled for rental catalog)
+// Render Fence Rentals Grid (only active products enabled and priced for rental catalog)
 function renderProductGrid(products) {
   const container = document.getElementById('productGridContainer');
   if (!container) return;
 
-  const rentalProducts = products.filter(p => p.isRental !== false);
+  const rentalProducts = products.filter(p => p.isRental !== false && !p.suspended && parseFloat(p.rentalPriceMonthly || 0) > 0);
 
   if (rentalProducts.length === 0) {
     container.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">No rental products found.</p>`;
     return;
   }
 
-  container.innerHTML = rentalProducts.map(p => {
-    const hasPrice = p.rentalPriceMonthly && parseFloat(p.rentalPriceMonthly) > 0;
+  container.innerHTML = rentalProducts.map(p => `
+    <div class="product-card">
+      <div class="product-img-wrapper">
+        <img src="${resolveProductImgUrl(p.image)}" alt="${p.name}" class="product-img">
+      </div>
+      <div class="product-body">
+        <h3 class="product-name">${p.name}</h3>
+        ${p.description ? `<p class="product-description">${p.description}</p>` : ''}
+        <div class="product-specs">${p.specs}</div>
 
-    return `
-      <div class="product-card ${hasPrice ? '' : 'unavailable'}">
-        <div class="product-img-wrapper">
-          ${hasPrice ? '' : '<div class="unavailable-overlay-badge">✖ Not For Rent</div>'}
-          <img src="${resolveProductImgUrl(p.image)}" alt="${p.name}" class="product-img">
-        </div>
-        <div class="product-body">
-          <h3 class="product-name">${p.name}</h3>
-          ${p.description ? `<p class="product-description">${p.description}</p>` : ''}
-          <div class="product-specs">${p.specs}</div>
-
-          <div class="product-prices" style="border-top: none; padding-top: 0; margin-bottom: 0.5rem;">
-            <div>
-              <span style="font-size:0.75rem; color:var(--text-muted); display:block;">SERVICE</span>
-              <span class="sale-price" style="font-size: 1rem; color: #fff;">Jobsite Rental</span>
-            </div>
-            <div style="text-align: right;">
-              <span style="font-size:0.75rem; color:var(--text-muted); display:block;">MONTHLY RATE</span>
-              ${hasPrice ? `<span class="rental-price" style="font-weight:700; color:#38bdf8;">$${parseFloat(p.rentalPriceMonthly).toFixed(2)} ${p.type === 'gate' ? '/ gate / mo' : '/ LF / mo'}</span>` : '<span style="color: #f87171; font-weight: 700; font-size: 0.9rem;">Unpriced</span>'}
-            </div>
+        <div class="product-prices" style="border-top: none; padding-top: 0; margin-bottom: 0.5rem;">
+          <div>
+            <span style="font-size:0.75rem; color:var(--text-muted); display:block;">SERVICE</span>
+            <span class="sale-price" style="font-size: 1rem; color: #fff;">Jobsite Rental</span>
           </div>
+          <div style="text-align: right;">
+            <span style="font-size:0.75rem; color:var(--text-muted); display:block;">MONTHLY RATE</span>
+            <span class="rental-price" style="font-weight:700; color:#38bdf8;">$${parseFloat(p.rentalPriceMonthly).toFixed(2)} ${p.type === 'gate' ? '/ gate / mo' : '/ LF / mo'}</span>
+          </div>
+        </div>
 
-          ${hasPrice ? `
-            <div class="card-actions" style="margin-top: auto;">
-              <button class="btn btn-primary" style="grid-column: 1 / -1; width: 100%;" onclick="switchView('calc-view')">Fence Rental Quote</button>
-            </div>
-          ` : `
-            <div class="unavailable-banner">❌ Unavailable for Rental</div>
-          `}
+        <div class="card-actions" style="margin-top: auto;">
+          <button class="btn btn-primary" style="grid-column: 1 / -1; width: 100%;" onclick="switchView('calc-view')">Fence Rental Quote</button>
         </div>
       </div>
-    `;
-  }).join('');
+    </div>
+  `).join('');
 }
 
-// Render Fence Panel Purchases Grid (only products enabled for purchase catalog)
+// Render Fence Panel Purchases Grid (only active products enabled and priced for purchase catalog)
 function renderPurchaseGrid(products) {
   const container = document.getElementById('purchaseGridContainer');
   if (!container) return;
 
-  const purchaseProducts = products.filter(p => p.isPurchase !== false);
+  const purchaseProducts = products.filter(p => p.isPurchase !== false && !p.suspended && parseFloat(p.salePrice || 0) > 0);
 
   if (purchaseProducts.length === 0) {
     container.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">No purchase products found.</p>`;
     return;
   }
 
-  container.innerHTML = purchaseProducts.map(p => {
-    const hasPrice = p.salePrice && parseFloat(p.salePrice) > 0;
+  container.innerHTML = purchaseProducts.map(p => `
+    <div class="product-card">
+      <div class="product-img-wrapper">
+        <img src="${resolveProductImgUrl(p.image)}" alt="${p.name}" class="product-img">
+      </div>
+      <div class="product-body">
+        <h3 class="product-name">${p.name}</h3>
+        ${p.description ? `<p class="product-description">${p.description}</p>` : ''}
+        <div class="product-specs">${p.specs}</div>
 
-    return `
-      <div class="product-card ${hasPrice ? '' : 'unavailable'}">
-        <div class="product-img-wrapper">
-          ${hasPrice ? '' : '<div class="unavailable-overlay-badge">✖ Not For Sale</div>'}
-          <img src="${resolveProductImgUrl(p.image)}" alt="${p.name}" class="product-img">
-        </div>
-        <div class="product-body">
-          <h3 class="product-name">${p.name}</h3>
-          ${p.description ? `<p class="product-description">${p.description}</p>` : ''}
-          <div class="product-specs">${p.specs}</div>
-
-          <div class="product-prices" style="border-top: none; padding-top: 0; margin-bottom: 0.5rem;">
-            <div>
-              <span style="font-size:0.75rem; color:var(--text-muted); display:block;">PRICING</span>
-              <span style="font-size: 0.9rem; color: #fff; font-weight: 600;">Per Unit Purchase</span>
-            </div>
-            <div style="text-align: right;">
-              <span style="font-size:0.75rem; color:var(--text-muted); display:block;">UNIT PRICE</span>
-              ${hasPrice ? `<span class="sale-price" style="font-weight:800; color:var(--accent); font-size:1.2rem;">$${parseFloat(p.salePrice).toFixed(2)} / unit</span>` : '<span style="color: #f87171; font-weight: 700; font-size: 0.9rem;">Unpriced</span>'}
-            </div>
+        <div class="product-prices" style="border-top: none; padding-top: 0; margin-bottom: 0.5rem;">
+          <div>
+            <span style="font-size:0.75rem; color:var(--text-muted); display:block;">PRICING</span>
+            <span style="font-size: 0.9rem; color: #fff; font-weight: 600;">Per Unit Purchase</span>
           </div>
+          <div style="text-align: right;">
+            <span style="font-size:0.75rem; color:var(--text-muted); display:block;">UNIT PRICE</span>
+            <span class="sale-price" style="font-weight:800; color:var(--accent); font-size:1.2rem;">$${parseFloat(p.salePrice).toFixed(2)} / unit</span>
+          </div>
+        </div>
 
-          ${hasPrice ? `
-            <div class="qty-selector-catalog" style="margin-top: auto;">
-              <span>Qty:</span>
-              <input type="number" id="qty-p-${p.id}" class="form-input qty-input-small" value="1" min="1">
-            </div>
+        <div class="qty-selector-catalog" style="margin-top: auto;">
+          <span>Qty:</span>
+          <input type="number" id="qty-p-${p.id}" class="form-input qty-input-small" value="1" min="1">
+        </div>
 
-            <div class="card-actions" style="margin-top: 0.5rem;">
-              <button class="btn btn-primary" style="grid-column: 1 / -1;" onclick="handleAddToCartFromCatalog('${p.id}', 'sale', 'qty-p-${p.id}')">🛒 Add Purchase to Cart</button>
-            </div>
-          ` : `
-            <div class="unavailable-banner">❌ Unavailable for Purchase</div>
-          `}
+        <div class="card-actions" style="margin-top: 0.5rem;">
+          <button class="btn btn-primary" style="grid-column: 1 / -1;" onclick="handleAddToCartFromCatalog('${p.id}', 'sale', 'qty-p-${p.id}')">🛒 Add Purchase to Cart</button>
         </div>
       </div>
-    `;
-  }).join('');
+    </div>
+  `).join('');
 }
 
 // Add to Cart from Catalog with Quantity
@@ -230,7 +212,7 @@ function filterCatalog(category) {
   }
   if (event && event.target) event.target.classList.add('active');
 
-  const rentalProducts = productsData.filter(p => p.isRental !== false);
+  const rentalProducts = productsData.filter(p => p.isRental !== false && !p.suspended && parseFloat(p.rentalPriceMonthly || 0) > 0);
 
   if (category === 'all') {
     renderProductGrid(rentalProducts);
@@ -248,7 +230,7 @@ function filterPurchaseCatalog(category) {
   }
   if (event && event.target) event.target.classList.add('active');
 
-  const purchaseProducts = productsData.filter(p => p.isPurchase !== false);
+  const purchaseProducts = productsData.filter(p => p.isPurchase !== false && !p.suspended && parseFloat(p.salePrice || 0) > 0);
 
   if (category === 'all') {
     renderPurchaseGrid(purchaseProducts);
@@ -1034,6 +1016,7 @@ async function loadAdminSalesTable() {
         <td>
           <select onchange="updateOrderStatus('${o.id}', this.value)" style="background:var(--bg-dark); color:#fff; border:1px solid var(--border); padding:0.2rem; border-radius:0.3rem; font-size:0.8rem;">
             <option value="Processing" ${o.status === 'Processing' ? 'selected' : ''}>Processing</option>
+            <option value="Ready for Delivery" ${o.status === 'Ready for Delivery' ? 'selected' : ''}>Ready for Delivery</option>
             <option value="Out for Delivery" ${o.status === 'Out for Delivery' ? 'selected' : ''}>Out for Delivery</option>
             <option value="Delivered" ${o.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
             <option value="Completed" ${o.status === 'Completed' ? 'selected' : ''}>Completed</option>
@@ -1056,6 +1039,7 @@ async function updateOrderStatus(orderId, status) {
     });
     if (res.ok) {
       loadAdminSalesTable();
+      loadAdminShipmentsTable();
     }
   } catch (e) {
     console.error(e);

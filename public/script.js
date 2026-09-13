@@ -427,8 +427,17 @@ function renderCartModal() {
     const prod = productsData.find(p => p.id === item.productId);
     if (!prod) return '';
 
-    const unitPrice = orderType === 'rental' ? prod.rentalPriceMonthly : prod.salePrice;
+    const isRentalMode = orderType === 'rental';
+    const unitPrice = isRentalMode ? prod.rentalPriceMonthly : prod.salePrice;
     const itemTotal = unitPrice * item.quantity;
+
+    const rateText = isRentalMode
+      ? (prod.type === 'gate' ? `$${unitPrice.toFixed(2)} / gate / month` : `$${unitPrice.toFixed(2)} / LF / month`)
+      : `$${unitPrice.toFixed(2)} / unit`;
+
+    const qtyDisplay = isRentalMode
+      ? (prod.type === 'gate' ? `${item.quantity} Gate(s)` : `${item.quantity * 12} LF`)
+      : `${item.quantity}`;
 
     const imgUrl = resolveProductImgUrl(prod.image);
 
@@ -437,11 +446,11 @@ function renderCartModal() {
         <img src="${imgUrl}" style="width: 45px; height: 45px; object-fit: contain;">
         <div class="cart-item-title">
           <div>${prod.name}</div>
-          <small style="color: var(--text-muted);">$${unitPrice.toFixed(2)} ${orderType === 'rental' ? '/ month' : '/ unit (per item)'}</small>
+          <small style="color: var(--text-muted);">${rateText}</small>
         </div>
         <div class="qty-control">
           <button class="qty-btn" onclick="changeCartQty('${item.productId}', -1)">-</button>
-          <span style="font-weight: bold; width: 30px; text-align: center;">${item.quantity}</span>
+          <span style="font-weight: bold; padding: 0 0.25rem; text-align: center; font-size: 0.85rem;">${qtyDisplay}</span>
           <button class="qty-btn" onclick="changeCartQty('${item.productId}', 1)">+</button>
         </div>
         <div style="font-weight: bold; margin-left: 0.5rem; color: var(--accent); min-width: 70px; text-align: right;">

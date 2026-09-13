@@ -160,12 +160,12 @@ function renderPurchaseGrid(products) {
 
         <div class="product-prices" style="border-top: none; padding-top: 0; margin-bottom: 0.5rem;">
           <div>
-            <span style="font-size:0.75rem; color:var(--text-muted); display:block;">PURCHASE TYPE</span>
-            <span style="font-size: 0.9rem; color: #fff;">Outright Buy</span>
+            <span style="font-size:0.75rem; color:var(--text-muted); display:block;">PRICING</span>
+            <span style="font-size: 0.9rem; color: #fff; font-weight: 600;">Per Unit Purchase</span>
           </div>
           <div style="text-align: right;">
             <span style="font-size:0.75rem; color:var(--text-muted); display:block;">UNIT PRICE</span>
-            <span class="sale-price" style="font-weight:800; color:var(--accent); font-size:1.2rem;">$${p.salePrice.toFixed(2)}</span>
+            <span class="sale-price" style="font-weight:800; color:var(--accent); font-size:1.2rem;">$${p.salePrice.toFixed(2)} / unit</span>
           </div>
         </div>
 
@@ -395,7 +395,7 @@ function renderCartModal() {
         <img src="${imgUrl}" style="width: 45px; height: 45px; object-fit: contain;">
         <div class="cart-item-title">
           <div>${prod.name}</div>
-          <small style="color: var(--text-muted);">$${unitPrice.toFixed(2)} ${orderType === 'rental' ? '/ month' : 'each'}</small>
+          <small style="color: var(--text-muted);">$${unitPrice.toFixed(2)} ${orderType === 'rental' ? '/ month' : '/ unit (per item)'}</small>
         </div>
         <div class="qty-control">
           <button class="qty-btn" onclick="changeCartQty('${item.productId}', -1)">-</button>

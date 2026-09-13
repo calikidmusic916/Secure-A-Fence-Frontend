@@ -561,7 +561,7 @@
         <div class="form-group">
           <label class="form-label">Order Type</label>
           <select id="cartOrderType" class="form-select" onchange="renderCartModal()">
-            <option value="sale">Outright Purchase ($65 panel, $10 stand, $5 clip)</option>
+            <option value="sale">Outright Unit Purchase ($65/unit panel, $10/unit stand, $5/unit clip)</option>
             <option value="rental">Monthly Rental ($1.35/LF/mo panel, $0.34/LF setup)</option>
           </select>
         </div>
@@ -577,9 +577,9 @@
 
         <div style="margin-top: 1.5rem; background: var(--bg-dark); padding: 1rem; border-radius: 0.5rem; border: 1px solid var(--border);">
           <div id="cartSaleBreakdown">
-            <div class="result-item"><span>Subtotal:</span><strong id="cartSubtotalVal">$0.00</strong></div>
+            <div class="result-item"><span>Unit Purchase Subtotal:</span><strong id="cartSubtotalVal">$0.00</strong></div>
             <div class="result-item"><span>Jobsite Delivery Freight:</span><strong id="cartDeliveryFeeVal">$0.00</strong></div>
-            <div class="result-item"><span>Estimated Tax (8%):</span><strong id="cartTaxVal">$0.00</strong></div>
+            <div class="result-item"><span>Estimated Sales Tax (8%):</span><strong id="cartTaxVal">$0.00</strong></div>
           </div>
           <div id="cartRentalBreakdown" style="display: none;">
             <div class="result-item" style="border-bottom: 1px dashed var(--border); padding-bottom: 0.5rem; margin-bottom: 0.5rem;">

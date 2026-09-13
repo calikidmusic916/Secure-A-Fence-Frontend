@@ -1185,12 +1185,35 @@ function openRentalDetailsModal(rentalId) {
         <button class="btn btn-outline" onclick="openRentalModal('${r.id}', 'extend')">📅 Extend Rental Date</button>
         <button class="btn btn-primary" onclick="openRentalModal('${r.id}', 'pickup')">🚚 Schedule Pickup Transport</button>
         ${r.status !== 'Returned' ? `<button class="btn btn-accent" onclick="checkinRental('${r.id}'); closeRentalDetailsModal();">📥 Check-In Equipment Return</button>` : ''}
+        <button class="btn btn-danger" style="background: var(--warning); color: #fff;" onclick="deleteRentalRecord('${r.id}')">Delete Rental</button>
       </div>
       <button class="btn btn-outline" onclick="closeRentalDetailsModal()">Close Details</button>
     `;
   }
 
   modal.classList.add('active');
+}
+
+async function deleteRentalRecord(rentalId) {
+  if (!confirm(`Are you sure you want to PERMANENTLY delete rental agreement ${rentalId}? This cannot be undone.`)) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/rentals/${rentalId}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${authToken}` }
+    });
+
+    if (res.ok) {
+      alert('Rental agreement deleted permanently.');
+      closeRentalDetailsModal();
+      loadAdminRentalsTable();
+      loadAdminDashboard();
+    } else {
+      alert('Failed to delete rental agreement.');
+    }
+  } catch (e) {
+    alert('Error deleting rental agreement.');
+  }
 }
 
 function closeRentalDetailsModal() {
@@ -1262,16 +1285,41 @@ async function loadAdminSalesTable() {
         <td>${o.deliveryAddress}</td>
         <td><span class="status-badge status-${o.status.toLowerCase().replace(/\s+/g, '')}">${o.status}</span></td>
         <td>
-          <select onchange="updateOrderStatus('${o.id}', this.value)" style="background:var(--bg-dark); color:#fff; border:1px solid var(--border); padding:0.2rem; border-radius:0.3rem; font-size:0.8rem;">
-            <option value="Processing" ${o.status === 'Processing' ? 'selected' : ''}>Processing</option>
-            <option value="Ready for Delivery" ${o.status === 'Ready for Delivery' ? 'selected' : ''}>Ready for Delivery</option>
-            <option value="Out for Delivery" ${o.status === 'Out for Delivery' ? 'selected' : ''}>Out for Delivery</option>
-            <option value="Delivered" ${o.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
-            <option value="Completed" ${o.status === 'Completed' ? 'selected' : ''}>Completed</option>
-          </select>
+          <div style="display: flex; gap: 0.3rem; align-items: center;">
+            <select onchange="updateOrderStatus('${o.id}', this.value)" style="background:var(--bg-dark); color:#fff; border:1px solid var(--border); padding:0.2rem; border-radius:0.3rem; font-size:0.8rem;">
+              <option value="Processing" ${o.status === 'Processing' ? 'selected' : ''}>Processing</option>
+              <option value="Ready for Delivery" ${o.status === 'Ready for Delivery' ? 'selected' : ''}>Ready for Delivery</option>
+              <option value="Out for Delivery" ${o.status === 'Out for Delivery' ? 'selected' : ''}>Out for Delivery</option>
+              <option value="Delivered" ${o.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+              <option value="Completed" ${o.status === 'Completed' ? 'selected' : ''}>Completed</option>
+            </select>
+            <button class="btn btn-danger" style="padding: 0.2rem 0.5rem; font-size: 0.75rem; background: var(--warning); color: #fff;" onclick="deleteOrderRecord('${o.id}')">Delete</button>
+          </div>
         </td>
       </tr>
     `).join('');
+  }
+}
+
+async function deleteOrderRecord(orderId) {
+  if (!confirm(`Are you sure you want to PERMANENTLY delete order ${orderId}? This cannot be undone.`)) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/sales/${orderId}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${authToken}` }
+    });
+
+    if (res.ok) {
+      alert('Order deleted permanently.');
+      loadAdminSalesTable();
+      loadAdminShipmentsTable();
+      loadAdminInvoicesTable();
+    } else {
+      alert('Failed to delete order.');
+    }
+  } catch (e) {
+    alert('Error deleting order.');
   }
 }
 

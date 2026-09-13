@@ -124,14 +124,8 @@ function renderProductGrid(products) {
           </div>
         </div>
 
-        <div class="qty-selector-catalog" style="margin-top: auto;">
-          <span>Qty:</span>
-          <input type="number" id="qty-r-${p.id}" class="form-input qty-input-small" value="1" min="1">
-        </div>
-
-        <div class="card-actions" style="margin-top: 0.5rem;">
-          <button class="btn btn-outline" onclick="handleAddToCartFromCatalog('${p.id}', 'rental', 'qty-r-${p.id}')">Add Rental to Cart</button>
-          <button class="btn btn-primary" onclick="switchView('calc-view')">Fence Rental Quote</button>
+        <div class="card-actions" style="margin-top: auto;">
+          <button class="btn btn-primary" style="grid-column: 1 / -1; width: 100%;" onclick="switchView('calc-view')">Fence Rental Quote</button>
         </div>
       </div>
     </div>
@@ -360,10 +354,23 @@ function renderCartModal() {
       </div>
     `;
 
-    document.getElementById('cartSubtotalVal').innerText = `$${quoteData.finalTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
-    document.getElementById('cartDeliveryFeeVal').innerText = 'Included in Quote';
-    document.getElementById('cartTaxVal').innerText = 'Calculated at Invoicing';
-    document.getElementById('cartTotalVal').innerText = `$${quoteData.finalTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+    if (document.getElementById('cartEquipmentBreakdown')) {
+      const panelsCount = Math.ceil(quoteData.linearFeet / 12);
+      const standsCount = panelsCount > 0 ? panelsCount + 1 : 0;
+      const clipsCount = panelsCount;
+      document.getElementById('cartEquipmentBreakdown').innerText = `${panelsCount} Panels | ${standsCount} Stands | ${clipsCount} Clips`;
+    }
+
+    if (document.getElementById('cartRentalBreakdown')) document.getElementById('cartRentalBreakdown').style.display = 'block';
+    if (document.getElementById('cartSaleBreakdown')) document.getElementById('cartSaleBreakdown').style.display = 'none';
+    if (document.getElementById('rentalMonthsGroup')) document.getElementById('rentalMonthsGroup').style.display = 'none';
+
+    if (document.getElementById('cartSetupVal')) document.getElementById('cartSetupVal').innerText = `$${quoteData.setupTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    if (document.getElementById('cartMonthlyVal')) document.getElementById('cartMonthlyVal').innerText = `$${quoteData.totalMonthly.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / mo`;
+    document.getElementById('cartTotalVal').innerText = `$${quoteData.finalTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+    const minWarn = document.getElementById('cartMinWarning');
+    if (minWarn) minWarn.style.display = (quoteData.finalTotal === 300 && ((quoteData.totalMonthly * quoteData.months) + quoteData.setupTotal < 300)) ? 'block' : 'none';
     return;
   }
 

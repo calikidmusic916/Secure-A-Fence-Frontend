@@ -1393,6 +1393,8 @@ async function deleteProduct(productId) {
 
 // --- ADMIN INVOICE MANAGEMENT ---
 
+let adminInvoicesData = [];
+
 async function loadAdminInvoicesTable() {
   try {
     const res = await fetch(`${API_BASE}/api/admin/invoices`, {
@@ -1400,23 +1402,175 @@ async function loadAdminInvoicesTable() {
     });
 
     if (res.ok) {
-      const invoices = await res.json();
+      adminInvoicesData = await res.json();
       const tbody = document.getElementById('adminInvoicesTableBody');
       if (!tbody) return;
 
-      tbody.innerHTML = invoices.map(inv => `
+      tbody.innerHTML = adminInvoicesData.map(inv => `
         <tr>
           <td><strong>${inv.id}</strong></td>
-          <td>${inv.orderId}</td>
+          <td>${inv.orderId || 'N/A'}</td>
           <td>${inv.customerName}</td>
-          <td>$${inv.amount.toFixed(2)}</td>
-          <td>${inv.createdAt}</td>
-          <td><span class="status-badge ${inv.status === 'Paid' ? 'status-active' : 'status-pending'}">${inv.status}</span></td>
+          <td><strong>$${(inv.amount || 0).toFixed(2)}</strong></td>
+          <td>${inv.createdAt || 'N/A'}</td>
+          <td>
+            <span class="status-badge ${inv.status === 'Paid' ? 'status-active' : 'status-pending'}">${inv.status || 'Unpaid'}</span>
+            ${inv.paymentMethod ? `<small style="display:block; color:var(--text-muted);">${inv.paymentMethod}</small>` : ''}
+          </td>
+          <td>
+            <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+              <button class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;" onclick="viewInvoiceDetailModal('${inv.id}')">👁️ View / Print</button>
+              <button class="btn btn-accent" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;" onclick="updateInvoicePaymentPrompt('${inv.id}')">💵 Mark Paid</button>
+              <button class="btn btn-danger" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; background: var(--warning); color: #fff;" onclick="deleteInvoice('${inv.id}')">Delete</button>
+            </div>
+          </td>
         </tr>
       `).join('');
     }
   } catch (e) {
     console.error('Error loading invoices', e);
+  }
+}
+
+function viewInvoiceDetailModal(invoiceId) {
+  const inv = adminInvoicesData.find(i => i.id === invoiceId);
+  if (!inv) return;
+
+  const area = document.getElementById('invoicePrintableArea');
+  if (!area) return;
+
+  area.innerHTML = `
+    <div style="font-family: sans-serif; color: #0f172a; line-height: 1.5;">
+      <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #2563eb; padding-bottom: 1rem; margin-bottom: 1.5rem;">
+        <div>
+          <h2 style="margin: 0; color: #1e3a8a; font-size: 1.5rem;">SECURE-A-FENCE INC.</h2>
+          <div style="font-size: 0.85rem; color: #475569;">123 Perimeter Way, Sacramento, CA 95814</div>
+          <div style="font-size: 0.85rem; color: #475569;">📞 Phone: 916-573-9543 | 📧 Email: sales@secureafence.com</div>
+        </div>
+        <div style="text-align: right;">
+          <h3 style="margin: 0; color: #2563eb;">INVOICE</h3>
+          <div style="font-size: 1.1rem; font-weight: bold; margin-top: 0.25rem;">${inv.id}</div>
+          <div style="font-size: 0.85rem; color: #475569;">Date: ${inv.createdAt || 'N/A'}</div>
+          <div style="font-size: 0.85rem; color: #475569;">Order Ref: ${inv.orderId || 'N/A'}</div>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem; background: #f8fafc; padding: 1rem; border-radius: 0.5rem; border: 1px solid #e2e8f0;">
+        <div>
+          <div style="font-size: 0.75rem; text-transform: uppercase; color: #64748b; font-weight: bold;">BILL TO</div>
+          <div style="font-size: 1rem; font-weight: bold; color: #0f172a;">${inv.customerName}</div>
+          <div style="font-size: 0.85rem; color: #334155;">${inv.customerCompany || 'Direct Client'}</div>
+          <div style="font-size: 0.85rem; color: #334155;">${inv.businessAddress || 'No HQ Address Provided'}</div>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-size: 0.75rem; text-transform: uppercase; color: #64748b; font-weight: bold;">PAYMENT STATUS</div>
+          <div style="font-size: 1.1rem; font-weight: bold; color: ${inv.status === 'Paid' ? '#16a34a' : '#d97706'};">${(inv.status || 'UNPAID').toUpperCase()}</div>
+          <div style="font-size: 0.85rem; color: #334155;">Method: ${inv.paymentMethod || 'None / Pending'}</div>
+        </div>
+      </div>
+
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; font-size: 0.9rem;">
+        <thead>
+          <tr style="background: #e2e8f0; text-align: left; font-weight: bold; color: #334155;">
+            <th style="padding: 0.6rem; border: 1px solid #cbd5e1;">Description</th>
+            <th style="padding: 0.6rem; border: 1px solid #cbd5e1; text-align: right;">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="padding: 0.6rem; border: 1px solid #cbd5e1;">Invoice Billing for Order #${inv.orderId || 'Direct'}</td>
+            <td style="padding: 0.6rem; border: 1px solid #cbd5e1; text-align: right; font-weight: bold;">$${(inv.amount || 0).toFixed(2)}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div style="display: flex; justify-content: flex-end; margin-bottom: 1.5rem;">
+        <div style="width: 250px; font-size: 0.9rem;">
+          <div style="display: flex; justify-content: space-between; padding: 0.4rem 0; border-bottom: 2px solid #0f172a; font-weight: bold; font-size: 1.1rem;">
+            <span>Total Amount:</span>
+            <span>$${(inv.amount || 0).toFixed(2)}</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align: center; font-size: 0.8rem; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 1rem;">
+        Thank you for choosing Secure-A-Fence Inc. | For billing inquiries call 916-573-9543
+      </div>
+    </div>
+  `;
+
+  document.getElementById('invoiceDetailModal').classList.add('active');
+}
+
+function closeInvoiceDetailModal() {
+  document.getElementById('invoiceDetailModal').classList.remove('active');
+}
+
+function printInvoiceDocument() {
+  const content = document.getElementById('invoicePrintableArea').innerHTML;
+  const printWindow = window.open('', '_blank', 'width=800,height=900');
+  printWindow.document.write(`
+    <html>
+      <head>
+        <title>Print Invoice - Secure-A-Fence</title>
+        <style>body { font-family: sans-serif; padding: 2rem; }</style>
+      </head>
+      <body>${content}</body>
+    </html>
+  `);
+  printWindow.document.close();
+  printWindow.focus();
+  setTimeout(() => {
+    printWindow.print();
+    printWindow.close();
+  }, 250);
+}
+
+async function updateInvoicePaymentPrompt(invoiceId) {
+  const method = prompt('Enter payment method (e.g. Credit Card, ACH Wire, Cash, Check, Net 30):', 'Credit Card');
+  if (!method) return;
+
+  const status = prompt('Enter payment status (Paid, Unpaid, Partial):', 'Paid');
+  if (!status) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/invoices/${invoiceId}/payment`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`
+      },
+      body: JSON.stringify({ status, paymentMethod: method })
+    });
+
+    if (res.ok) {
+      alert('Invoice payment status updated successfully!');
+      loadAdminInvoicesTable();
+    } else {
+      alert('Failed to update invoice payment.');
+    }
+  } catch (e) {
+    alert('Error updating invoice payment.');
+  }
+}
+
+async function deleteInvoice(invoiceId) {
+  if (!confirm('Are you sure you want to PERMANENTLY delete this invoice? This cannot be undone.')) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/invoices/${invoiceId}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${authToken}` }
+    });
+
+    if (res.ok) {
+      alert('Invoice deleted.');
+      loadAdminInvoicesTable();
+    } else {
+      alert('Failed to delete invoice.');
+    }
+  } catch (e) {
+    alert('Error deleting invoice.');
   }
 }
 

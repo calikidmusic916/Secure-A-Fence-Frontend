@@ -525,6 +525,7 @@
                 <th>Amount</th>
                 <th>Date</th>
                 <th>Status</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody id="adminInvoicesTableBody">
@@ -891,6 +892,23 @@
       <div class="modal-footer">
         <button class="btn btn-outline" onclick="closeInvoiceModal()">Cancel</button>
         <button class="btn btn-accent" onclick="saveInvoice()">Generate Invoice</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- INVOICE VIEW / PRINT DETAIL MODAL -->
+  <div class="modal-overlay" id="invoiceDetailModal">
+    <div class="modal-card" style="max-width: 700px;">
+      <div class="modal-header">
+        <h3 id="invoiceDetailTitle">Invoice Details</h3>
+        <button class="close-btn" onclick="closeInvoiceDetailModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="invoicePrintableArea" style="background: #fff; color: #000; padding: 2rem; border-radius: 0.5rem;">
+        <!-- Printable Invoice injected dynamically -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeInvoiceDetailModal()">Close</button>
+        <button class="btn btn-accent" onclick="printInvoiceDocument()">🖨️ Print / Save PDF Invoice</button>
       </div>
     </div>
   </div>

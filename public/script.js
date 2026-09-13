@@ -135,7 +135,7 @@ function renderProductGrid(products) {
             </div>
             <div style="text-align: right;">
               <span style="font-size:0.75rem; color:var(--text-muted); display:block;">MONTHLY RATE</span>
-              ${hasPrice ? `<span class="rental-price" style="font-weight:700; color:#38bdf8;">$${parseFloat(p.rentalPriceMonthly).toFixed(2)}${p.id.includes('linear') || p.id.includes('privacy') ? ' / LF / mo' : ' / mo'}</span>` : '<span style="color: #f87171; font-weight: 700; font-size: 0.9rem;">Unpriced</span>'}
+              ${hasPrice ? `<span class="rental-price" style="font-weight:700; color:#38bdf8;">$${parseFloat(p.rentalPriceMonthly).toFixed(2)} ${p.type === 'gate' ? '/ gate / mo' : '/ LF / mo'}</span>` : '<span style="color: #f87171; font-weight: 700; font-size: 0.9rem;">Unpriced</span>'}
             </div>
           </div>
 

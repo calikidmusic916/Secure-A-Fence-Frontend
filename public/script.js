@@ -102,91 +102,122 @@ function resolveProductImgUrl(img) {
   return API_BASE + (img.startsWith('/') ? img : '/' + img);
 }
 
-// Render Fence Rentals Grid (only active products enabled and priced for rental catalog)
+// Helper pricing fallbacks
+function getDisplayRentalPrice(p) {
+  const price = parseFloat(p.rentalPriceMonthly);
+  if (price && price > 0) return price;
+  if (p.type === 'panel') return 1.35;
+  if (p.type === 'stand') return 3.00;
+  if (p.type === 'clip') return 1.00;
+  if (p.type === 'gate') return 25.00;
+  if (p.type === 'accessory') return 0.33;
+  return 1.35;
+}
+
+function getDisplaySalePrice(p) {
+  const price = parseFloat(p.salePrice);
+  if (price && price > 0) return price;
+  if (p.type === 'panel') return 65.00;
+  if (p.type === 'stand') return 10.00;
+  if (p.type === 'clip') return 5.00;
+  if (p.type === 'gate') return 250.00;
+  if (p.type === 'accessory') return 45.00;
+  return 50.00;
+}
+
+// Render Fence Rentals Grid
 function renderProductGrid(products) {
   const container = document.getElementById('productGridContainer');
   if (!container) return;
 
-  const rentalProducts = products.filter(p => p.isRental !== false && !p.suspended && parseFloat(p.rentalPriceMonthly || 0) > 0);
+  const rentalProducts = products.filter(p => p.isRental !== false && !p.suspended);
 
   if (rentalProducts.length === 0) {
     container.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">No rental products found.</p>`;
     return;
   }
 
-  container.innerHTML = rentalProducts.map(p => `
-    <div class="product-card">
-      <div class="product-img-wrapper">
-        <img src="${resolveProductImgUrl(p.image)}" alt="${p.name}" class="product-img">
-      </div>
-      <div class="product-body">
-        <h3 class="product-name">${p.name}</h3>
-        ${p.description ? `<p class="product-description">${p.description}</p>` : ''}
-        <div class="product-specs">${p.specs}</div>
+  container.innerHTML = rentalProducts.map(p => {
+    const rentalPrice = getDisplayRentalPrice(p);
 
-        <div class="product-prices" style="border-top: none; padding-top: 0; margin-bottom: 0.5rem;">
-          <div>
-            <span style="font-size:0.75rem; color:var(--text-muted); display:block;">SERVICE</span>
-            <span class="sale-price" style="font-size: 1rem; color: #fff;">Jobsite Rental</span>
+    return `
+      <div class="product-card">
+        <div class="product-img-wrapper">
+          <img src="${resolveProductImgUrl(p.image)}" alt="${p.name}" class="product-img">
+        </div>
+        <div class="product-body">
+          <h3 class="product-name">${p.name}</h3>
+          ${p.description ? `<p class="product-description">${p.description}</p>` : ''}
+          <div class="product-specs">${p.specs}</div>
+
+          <div class="product-prices" style="border-top: none; padding-top: 0; margin-bottom: 0.5rem;">
+            <div>
+              <span style="font-size:0.75rem; color:var(--text-muted); display:block;">SERVICE</span>
+              <span class="sale-price" style="font-size: 1rem; color: #fff;">Jobsite Rental</span>
+            </div>
+            <div style="text-align: right;">
+              <span style="font-size:0.75rem; color:var(--text-muted); display:block;">MONTHLY RATE</span>
+              <span class="rental-price" style="font-weight:700; color:#38bdf8;">$${rentalPrice.toFixed(2)} ${p.type === 'gate' ? '/ gate / mo' : '/ LF / mo'}</span>
+            </div>
           </div>
-          <div style="text-align: right;">
-            <span style="font-size:0.75rem; color:var(--text-muted); display:block;">MONTHLY RATE</span>
-            <span class="rental-price" style="font-weight:700; color:#38bdf8;">$${parseFloat(p.rentalPriceMonthly).toFixed(2)} ${p.type === 'gate' ? '/ gate / mo' : '/ LF / mo'}</span>
+
+          <div class="card-actions" style="margin-top: auto;">
+            <button class="btn btn-primary" style="grid-column: 1 / -1; width: 100%;" onclick="switchView('calc-view')">Fence Rental Quote</button>
           </div>
         </div>
-
-        <div class="card-actions" style="margin-top: auto;">
-          <button class="btn btn-primary" style="grid-column: 1 / -1; width: 100%;" onclick="switchView('calc-view')">Fence Rental Quote</button>
-        </div>
       </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 }
 
-// Render Fence Panel Purchases Grid (only active products enabled and priced for purchase catalog)
+// Render Fence Panel Purchases Grid
 function renderPurchaseGrid(products) {
   const container = document.getElementById('purchaseGridContainer');
   if (!container) return;
 
-  const purchaseProducts = products.filter(p => p.isPurchase !== false && !p.suspended && parseFloat(p.salePrice || 0) > 0);
+  const purchaseProducts = products.filter(p => p.isPurchase !== false && !p.suspended);
 
   if (purchaseProducts.length === 0) {
     container.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">No purchase products found.</p>`;
     return;
   }
 
-  container.innerHTML = purchaseProducts.map(p => `
-    <div class="product-card">
-      <div class="product-img-wrapper">
-        <img src="${resolveProductImgUrl(p.image)}" alt="${p.name}" class="product-img">
-      </div>
-      <div class="product-body">
-        <h3 class="product-name">${p.name}</h3>
-        ${p.description ? `<p class="product-description">${p.description}</p>` : ''}
-        <div class="product-specs">${p.specs}</div>
+  container.innerHTML = purchaseProducts.map(p => {
+    const salePrice = getDisplaySalePrice(p);
 
-        <div class="product-prices" style="border-top: none; padding-top: 0; margin-bottom: 0.5rem;">
-          <div>
-            <span style="font-size:0.75rem; color:var(--text-muted); display:block;">PRICING</span>
-            <span style="font-size: 0.9rem; color: #fff; font-weight: 600;">Per Unit Purchase</span>
+    return `
+      <div class="product-card">
+        <div class="product-img-wrapper">
+          <img src="${resolveProductImgUrl(p.image)}" alt="${p.name}" class="product-img">
+        </div>
+        <div class="product-body">
+          <h3 class="product-name">${p.name}</h3>
+          ${p.description ? `<p class="product-description">${p.description}</p>` : ''}
+          <div class="product-specs">${p.specs}</div>
+
+          <div class="product-prices" style="border-top: none; padding-top: 0; margin-bottom: 0.5rem;">
+            <div>
+              <span style="font-size:0.75rem; color:var(--text-muted); display:block;">PRICING</span>
+              <span style="font-size: 0.9rem; color: #fff; font-weight: 600;">Per Unit Purchase</span>
+            </div>
+            <div style="text-align: right;">
+              <span style="font-size:0.75rem; color:var(--text-muted); display:block;">UNIT PRICE</span>
+              <span class="sale-price" style="font-weight:800; color:var(--accent); font-size:1.2rem;">$${salePrice.toFixed(2)} / unit</span>
+            </div>
           </div>
-          <div style="text-align: right;">
-            <span style="font-size:0.75rem; color:var(--text-muted); display:block;">UNIT PRICE</span>
-            <span class="sale-price" style="font-weight:800; color:var(--accent); font-size:1.2rem;">$${parseFloat(p.salePrice).toFixed(2)} / unit</span>
+
+          <div class="qty-selector-catalog" style="margin-top: auto;">
+            <span>Qty:</span>
+            <input type="number" id="qty-p-${p.id}" class="form-input qty-input-small" value="1" min="1">
+          </div>
+
+          <div class="card-actions" style="margin-top: 0.5rem;">
+            <button class="btn btn-primary" style="grid-column: 1 / -1;" onclick="handleAddToCartFromCatalog('${p.id}', 'sale', 'qty-p-${p.id}')">🛒 Add Purchase to Cart</button>
           </div>
         </div>
-
-        <div class="qty-selector-catalog" style="margin-top: auto;">
-          <span>Qty:</span>
-          <input type="number" id="qty-p-${p.id}" class="form-input qty-input-small" value="1" min="1">
-        </div>
-
-        <div class="card-actions" style="margin-top: 0.5rem;">
-          <button class="btn btn-primary" style="grid-column: 1 / -1;" onclick="handleAddToCartFromCatalog('${p.id}', 'sale', 'qty-p-${p.id}')">🛒 Add Purchase to Cart</button>
-        </div>
       </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 }
 
 // Add to Cart from Catalog with Quantity
@@ -212,7 +243,7 @@ function filterCatalog(category) {
   }
   if (event && event.target) event.target.classList.add('active');
 
-  const rentalProducts = productsData.filter(p => p.isRental !== false && !p.suspended && parseFloat(p.rentalPriceMonthly || 0) > 0);
+  const rentalProducts = productsData.filter(p => p.isRental !== false && !p.suspended);
 
   if (category === 'all') {
     renderProductGrid(rentalProducts);
@@ -230,7 +261,7 @@ function filterPurchaseCatalog(category) {
   }
   if (event && event.target) event.target.classList.add('active');
 
-  const purchaseProducts = productsData.filter(p => p.isPurchase !== false && !p.suspended && parseFloat(p.salePrice || 0) > 0);
+  const purchaseProducts = productsData.filter(p => p.isPurchase !== false && !p.suspended);
 
   if (category === 'all') {
     renderPurchaseGrid(purchaseProducts);
@@ -1280,17 +1311,6 @@ async function uploadShipmentPhotoFile(event) {
     }
   } catch (e) {
     alert('Error uploading delivery proof photo.');
-  }
-}
-
-    if (res.ok) {
-      alert('Shipment record updated!');
-      loadAdminShipmentsTable();
-    } else {
-      alert('Failed to update shipment.');
-    }
-  } catch (e) {
-    alert('Error updating shipment.');
   }
 }
 

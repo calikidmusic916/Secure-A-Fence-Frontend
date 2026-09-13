@@ -262,8 +262,8 @@ function runCalculator() {
   // Minimum Order Logic
   const finalTotal = rawTotal < 300 ? 300 : rawTotal;
 
-  // Equipment Breakdown (assuming 10ft panels standard for math visualization)
-  const panelsCount = Math.ceil(L / 10);
+  // Equipment Breakdown (calculating for 12ft wide 6x12 panels)
+  const panelsCount = Math.ceil(L / 12);
   const standsCount = panelsCount > 0 ? panelsCount + 1 : 0;
   const clipsCount = panelsCount;
 

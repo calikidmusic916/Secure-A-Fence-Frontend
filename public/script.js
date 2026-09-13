@@ -371,6 +371,9 @@ function renderCartModal() {
 
   if (cart.length === 0) {
     container.innerHTML = `<p style="text-align: center; color: var(--text-muted); padding: 2rem 0;">Your shopping cart is currently empty.</p>`;
+    if (document.getElementById('cartSaleBreakdown')) document.getElementById('cartSaleBreakdown').style.display = 'block';
+    if (document.getElementById('cartRentalBreakdown')) document.getElementById('cartRentalBreakdown').style.display = 'none';
+    if (document.getElementById('rentalMonthsGroup')) document.getElementById('rentalMonthsGroup').style.display = 'none';
     document.getElementById('cartSubtotalVal').innerText = '$0.00';
     document.getElementById('cartDeliveryFeeVal').innerText = '$0.00';
     document.getElementById('cartTaxVal').innerText = '$0.00';
@@ -378,15 +381,12 @@ function renderCartModal() {
     return;
   }
 
-  let subtotal = 0;
-
   container.innerHTML = cart.map(item => {
     const prod = productsData.find(p => p.id === item.productId);
     if (!prod) return '';
 
     const unitPrice = orderType === 'rental' ? prod.rentalPriceMonthly : prod.salePrice;
     const itemTotal = unitPrice * item.quantity;
-    subtotal += itemTotal;
 
     const imgUrl = prod.image.startsWith('/') ? API_BASE + prod.image : prod.image;
 
@@ -395,7 +395,7 @@ function renderCartModal() {
         <img src="${imgUrl}" style="width: 45px; height: 45px; object-fit: contain;">
         <div class="cart-item-title">
           <div>${prod.name}</div>
-          <small style="color: var(--text-muted);">$${unitPrice.toFixed(2)} ${orderType === 'rental' ? (prod.id.includes('linear') || prod.id.includes('privacy') ? '/ LF / month' : '/ month') : 'each'}</small>
+          <small style="color: var(--text-muted);">$${unitPrice.toFixed(2)} ${orderType === 'rental' ? '/ month' : 'each'}</small>
         </div>
         <div class="qty-control">
           <button class="qty-btn" onclick="changeCartQty('${item.productId}', -1)">-</button>
@@ -409,15 +409,93 @@ function renderCartModal() {
     `;
   }).join('');
 
-  const distance = parseFloat(document.getElementById('checkoutDistance').value) || 0;
-  const deliveryFee = distance <= 20 ? 0 : (distance - 20) * 2 * 1.00;
-  const tax = Math.round(subtotal * 0.08 * 100) / 100;
-  const total = subtotal + deliveryFee + tax;
+  // 2. Set Rates from Pricing Formula
+  const rateFence = 1.35; // per LF
+  const ratePrivacy = 0.33; // per LF
+  const rateGate = 25.00; // per gate
+  const rateInstall = 0.17; // per LF setup
+  const rateRemoval = 0.17; // per LF setup
 
-  document.getElementById('cartSubtotalVal').innerText = `$${subtotal.toFixed(2)}`;
-  document.getElementById('cartDeliveryFeeVal').innerText = `$${deliveryFee.toFixed(2)}`;
-  document.getElementById('cartTaxVal').innerText = `$${tax.toFixed(2)}`;
-  document.getElementById('cartTotalVal').innerText = `$${total.toFixed(2)}`;
+  const distance = parseFloat(document.getElementById('checkoutDistance').value) || 0;
+  const delivery = distance <= 20 ? 0 : (distance - 20) * 2 * 1.00;
+
+  if (orderType === 'rental') {
+    if (document.getElementById('cartSaleBreakdown')) document.getElementById('cartSaleBreakdown').style.display = 'none';
+    if (document.getElementById('cartRentalBreakdown')) document.getElementById('cartRentalBreakdown').style.display = 'block';
+    if (document.getElementById('rentalMonthsGroup')) document.getElementById('rentalMonthsGroup').style.display = 'block';
+
+    const months = parseInt(document.getElementById('checkoutMonths').value) || 1;
+
+    // Calculate total Linear Feet (LF) based on panels/items in cart
+    let totalLf = 0;
+    let totalGates = 0;
+    let hasPrivacy = false;
+
+    cart.forEach(item => {
+      const prod = productsData.find(p => p.id === item.productId);
+      if (prod) {
+        if (prod.type === 'panel') {
+          totalLf += item.quantity * 12; // 12ft wide panels
+        } else if (prod.type === 'gate') {
+          totalGates += item.quantity;
+        } else if (prod.id.includes('privacy') || prod.type === 'accessory') {
+          hasPrivacy = true;
+        }
+      }
+    });
+
+    if (totalLf === 0 && cart.length > 0) {
+      const totalQty = cart.reduce((sum, i) => sum + i.quantity, 0);
+      totalLf = totalQty * 12;
+    }
+
+    // 3. Calculate Monthly Recurring
+    const monthlyFence = totalLf * rateFence;
+    const monthlyPrivacy = hasPrivacy ? (totalLf * ratePrivacy) : 0;
+    const monthlyGate = totalGates * rateGate;
+    const totalMonthly = monthlyFence + monthlyPrivacy + monthlyGate;
+
+    // 4. Calculate One-Time Setup
+    const laborInstall = totalLf * rateInstall;
+    const laborRemoval = totalLf * rateRemoval;
+    const totalSetup = laborInstall + laborRemoval + delivery;
+
+    // 5. Calculate Grand Total
+    let grandTotal = (totalMonthly * months) + totalSetup;
+    let appliedMinimum = false;
+
+    // 6. Minimum Order Logic ($300)
+    if (grandTotal > 0 && grandTotal < 300) {
+      grandTotal = 300;
+      appliedMinimum = true;
+    }
+
+    if (document.getElementById('cartSetupVal')) document.getElementById('cartSetupVal').innerText = `$${totalSetup.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    if (document.getElementById('cartMonthlyVal')) document.getElementById('cartMonthlyVal').innerText = `$${totalMonthly.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / mo`;
+    document.getElementById('cartTotalVal').innerText = `$${grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+    const minWarn = document.getElementById('cartMinWarning');
+    if (minWarn) minWarn.style.display = appliedMinimum ? 'block' : 'none';
+  } else {
+    // Outright Purchase ('sale')
+    if (document.getElementById('cartSaleBreakdown')) document.getElementById('cartSaleBreakdown').style.display = 'block';
+    if (document.getElementById('cartRentalBreakdown')) document.getElementById('cartRentalBreakdown').style.display = 'none';
+    if (document.getElementById('rentalMonthsGroup')) document.getElementById('rentalMonthsGroup').style.display = 'none';
+
+    let subtotal = 0;
+    cart.forEach(item => {
+      const prod = productsData.find(p => p.id === item.productId);
+      if (prod) subtotal += prod.salePrice * item.quantity;
+    });
+
+    const tax = Math.round(subtotal * 0.08 * 100) / 100;
+    const total = subtotal + delivery + tax;
+
+    document.getElementById('cartSubtotalVal').innerText = `$${subtotal.toFixed(2)}`;
+    document.getElementById('cartDeliveryFeeVal').innerText = `$${delivery.toFixed(2)}`;
+    document.getElementById('cartTaxVal').innerText = `$${tax.toFixed(2)}`;
+    document.getElementById('cartTotalVal').innerText = `$${total.toFixed(2)}`;
+  }
 }
 
 function changeCartQty(productId, delta) {

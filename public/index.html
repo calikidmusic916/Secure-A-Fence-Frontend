@@ -561,8 +561,13 @@
           <label class="form-label">Order Type</label>
           <select id="cartOrderType" class="form-select" onchange="renderCartModal()">
             <option value="sale">Outright Purchase ($65 panel, $10 stand, $5 clip)</option>
-            <option value="rental">Monthly Rental ($15/mo panel, $3/mo stand, $1/mo clip)</option>
+            <option value="rental">Monthly Rental ($1.35/LF/mo panel, $0.34/LF setup)</option>
           </select>
+        </div>
+
+        <div class="form-group" id="rentalMonthsGroup" style="display: none;">
+          <label class="form-label">Estimated Rental Duration (Months)</label>
+          <input type="number" id="checkoutMonths" class="form-input" value="1" min="1" oninput="renderCartModal()">
         </div>
 
         <div id="cartItemsList">
@@ -570,9 +575,16 @@
         </div>
 
         <div style="margin-top: 1.5rem; background: var(--bg-dark); padding: 1rem; border-radius: 0.5rem; border: 1px solid var(--border);">
-          <div class="result-item"><span>Subtotal:</span><strong id="cartSubtotalVal">$0.00</strong></div>
-          <div class="result-item"><span>Jobsite Delivery Freight:</span><strong id="cartDeliveryFeeVal">$0.00</strong></div>
-          <div class="result-item"><span>Estimated Tax (8%):</span><strong id="cartTaxVal">$0.00</strong></div>
+          <div id="cartSaleBreakdown">
+            <div class="result-item"><span>Subtotal:</span><strong id="cartSubtotalVal">$0.00</strong></div>
+            <div class="result-item"><span>Jobsite Delivery Freight:</span><strong id="cartDeliveryFeeVal">$0.00</strong></div>
+            <div class="result-item"><span>Estimated Tax (8%):</span><strong id="cartTaxVal">$0.00</strong></div>
+          </div>
+          <div id="cartRentalBreakdown" style="display: none;">
+            <div class="result-item"><span>One-Time Setup (Delivery, Install, Removal):</span><strong id="cartSetupVal">$0.00</strong></div>
+            <div class="result-item"><span>Recurring Monthly Rate:</span><strong id="cartMonthlyVal">$0.00 / mo</strong></div>
+            <div id="cartMinWarning" style="color: var(--warning); font-size: 0.8rem; margin-top: 0.5rem; display: none;">* Note: Quote reflects our $300 minimum order policy.</div>
+          </div>
           <div class="result-item" style="font-size: 1.2rem; color: var(--accent); border-top: 1px solid var(--border); margin-top: 0.5rem; padding-top: 0.5rem;">
             <span>Total Payable:</span><strong id="cartTotalVal">$0.00</strong>
           </div>

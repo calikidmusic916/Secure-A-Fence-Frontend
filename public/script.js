@@ -999,34 +999,199 @@ function switchAdminSubTab(subTab) {
   document.getElementById('adminTab6').classList.toggle('active', subTab === 'customers');
 }
 
+let adminRentalsData = [];
+
 async function loadAdminRentalsTable() {
   const res = await fetch(`${API_BASE}/api/admin/rentals`, {
     headers: { 'Authorization': `Bearer ${authToken}` }
   });
 
   if (res.ok) {
-    const rentals = await res.json();
+    adminRentalsData = await res.json();
     const tbody = document.getElementById('adminRentalsTableBody');
+    if (!tbody) return;
 
-    tbody.innerHTML = rentals.map(r => `
-      <tr>
+    tbody.innerHTML = adminRentalsData.map(r => `
+      <tr style="cursor: pointer;" onclick="openRentalDetailsModal('${r.id}')">
         <td><strong>${r.id}</strong></td>
         <td>
-          <div>${r.customerName}</div>
-          <small style="color:var(--text-muted);">${r.customerCompany}</small>
+          <div style="font-weight: bold; color: #fff;">${r.customerName}</div>
+          <small style="color:var(--text-muted);">${r.customerCompany || 'Direct Client'}</small>
         </td>
-        <td>${r.jobsiteAddress}</td>
-        <td>${r.items.map(i => `<strong>${i.quantity}x</strong> ${i.name}`).join('<br>')}</td>
+        <td>
+          ${r.jobsiteAddress}<br>
+          <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.jobsiteAddress)}" target="_blank" onclick="event.stopPropagation();" style="color: var(--accent); font-size: 0.8rem; font-weight: bold; text-decoration: none;">📍 Map</a>
+        </td>
+        <td>${(r.items || []).map(i => `<strong>${i.quantity}x</strong> ${i.name}`).join('<br>')}</td>
         <td>${r.startDate} to ${r.endDate}</td>
         <td><span class="status-badge status-${r.status.toLowerCase().replace(/\s+/g, '')}">${r.status}</span></td>
-        <td>
-          ${r.status !== 'Returned' ? 
-            `<button class="btn btn-accent" style="font-size:0.8rem; padding:0.3rem 0.6rem;" onclick="checkinRental('${r.id}')">📥 Check-In Return</button>` : 
-            `<span style="color:var(--text-muted); font-size:0.8rem;">Returned to Yard</span>`}
+        <td onclick="event.stopPropagation();">
+          <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+            <button class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;" onclick="openRentalDetailsModal('${r.id}')">👁️ Details &amp; Invoices</button>
+            ${r.status !== 'Returned' ? `<button class="btn btn-accent" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;" onclick="checkinRental('${r.id}')">📥 Check-In</button>` : ''}
+          </div>
         </td>
       </tr>
     `).join('');
   }
+}
+
+function openRentalDetailsModal(rentalId) {
+  const r = adminRentalsData.find(item => item.id === rentalId);
+  if (!r) return;
+
+  const modal = document.getElementById('rentalDetailsModal');
+  const title = document.getElementById('rentalDetailsTitle');
+  const body = document.getElementById('rentalDetailsBody');
+  const footer = document.getElementById('rentalDetailsFooter');
+
+  if (title) title.innerText = `📋 Active Rental Fleet Agreement (${r.id})`;
+
+  // Find linked customer data
+  const customer = (adminCustomersData || []).find(c => c.id === r.customerId || c.email?.toLowerCase() === r.customerEmail?.toLowerCase() || c.name === r.customerName) || {};
+
+  // Find linked shipment and delivery proof photos
+  const shipment = (adminShipmentsData || []).find(s => s.orderId === r.orderId || s.destination?.toLowerCase() === r.jobsiteAddress?.toLowerCase()) || {};
+
+  // Find linked monthly invoices
+  const invoices = (adminInvoicesData || []).filter(inv => inv.orderId === r.orderId || inv.customerName === r.customerName);
+
+  if (body) {
+    body.innerHTML = `
+      <div style="display: flex; flex-direction: column; gap: 1.25rem; font-size: 0.9rem;">
+
+        <!-- SECTION 1: CUSTOMER & COMPANY INFO -->
+        <div style="background: var(--bg-dark); border: 1px solid var(--border); padding: 1rem; border-radius: 0.75rem;">
+          <h4 style="color: var(--accent); margin-bottom: 0.5rem;">👤 Customer &amp; Billing Account Information</h4>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; color: #fff;">
+            <div><strong style="color: var(--text-muted); display: block; font-size: 0.75rem;">CUSTOMER NAME</strong>${r.customerName}</div>
+            <div><strong style="color: var(--text-muted); display: block; font-size: 0.75rem;">COMPANY</strong>${r.customerCompany || customer.company || 'Direct Client'}</div>
+            <div><strong style="color: var(--text-muted); display: block; font-size: 0.75rem;">CONTACT EMAIL</strong>${r.customerEmail || customer.email || 'N/A'}</div>
+            <div><strong style="color: var(--text-muted); display: block; font-size: 0.75rem;">CONTACT PHONE</strong>${r.customerPhone || customer.phone || 'N/A'}</div>
+            <div><strong style="color: var(--text-muted); display: block; font-size: 0.75rem;">BILLING HQ ADDRESS</strong>${customer.businessAddress || 'Not Specified'}</div>
+            <div><strong style="color: var(--text-muted); display: block; font-size: 0.75rem;">TAX STATUS</strong>${customer.isTaxable === false ? '⚡ Tax Exempt' : 'Taxable (8% Sales Tax)'}</div>
+          </div>
+        </div>
+
+        <!-- SECTION 2: JOBSITE LOCATION & MAP -->
+        <div style="background: var(--bg-dark); border: 1px solid var(--border); padding: 1rem; border-radius: 0.75rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <h4 style="color: var(--accent); margin: 0;">📍 Jobsite Delivery Location</h4>
+            <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.jobsiteAddress)}" target="_blank" class="btn btn-accent" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; text-decoration: none;">🗺️ Open Google Maps Nav &rarr;</a>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; color: #fff;">
+            <div style="grid-column: 1 / -1;"><strong style="color: var(--text-muted); display: block; font-size: 0.75rem;">JOBSITE DELIVERY ADDRESS</strong>${r.jobsiteAddress}</div>
+            <div><strong style="color: var(--text-muted); display: block; font-size: 0.75rem;">SITE CONTACT PERSON</strong>${shipment.notes ? shipment.notes.replace('Jobsite Contact: ', '') : r.customerName}</div>
+            <div><strong style="color: var(--text-muted); display: block; font-size: 0.75rem;">DELIVERY DISTANCE</strong>${shipment.estimatedLegDistance || '15'} miles from yard</div>
+          </div>
+        </div>
+
+        <!-- SECTION 3: RENTED EQUIPMENT & MONTHLY RATE -->
+        <div style="background: var(--bg-dark); border: 1px solid var(--border); padding: 1rem; border-radius: 0.75rem;">
+          <h4 style="color: var(--accent); margin-bottom: 0.5rem;">📦 Deployed Equipment &amp; Monthly Billing Rate</h4>
+          <table class="data-table" style="margin-bottom: 0.75rem;">
+            <thead>
+              <tr>
+                <th>Equipment Name</th>
+                <th>Quantity / LF</th>
+                <th>Monthly Rate</th>
+                <th>Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${(r.items || []).map(item => `
+                <tr>
+                  <td><strong>${item.name}</strong></td>
+                  <td>${item.quantity} ${item.name.toLowerCase().includes('panel') || item.name.toLowerCase().includes('screen') ? 'LF' : 'units'}</td>
+                  <td>$${(item.monthlyUnitPrice || 0).toFixed(2)}/mo</td>
+                  <td>$${(item.subtotal || 0).toFixed(2)}/mo</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 0.75rem;">
+            <div>
+              <span style="color: var(--text-muted); font-size: 0.8rem;">RENTAL TERM:</span>
+              <strong style="color: #fff; margin-left: 0.4rem;">${r.startDate} to ${r.endDate}</strong>
+            </div>
+            <div>
+              <span style="color: var(--text-muted); font-size: 0.85rem;">TOTAL MONTHLY RATE:</span>
+              <strong style="color: #38bdf8; font-size: 1.2rem; margin-left: 0.4rem;">$${(r.monthlyRateTotal || 0).toFixed(2)} / month</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 4: DELIVERY PROOF PHOTOS & NOTES -->
+        <div style="background: var(--bg-dark); border: 1px solid var(--border); padding: 1rem; border-radius: 0.75rem;">
+          <h4 style="color: var(--accent); margin-bottom: 0.5rem;">📸 Jobsite Setup Proof Photos &amp; Driver Notes</h4>
+          ${shipment.notes ? `<p style="color: var(--text-main); font-size: 0.85rem; margin-bottom: 0.75rem;"><strong>Driver Notes:</strong> ${shipment.notes}</p>` : '<p style="color: var(--text-muted); font-size: 0.85rem;">No driver notes recorded.</p>'}
+          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 0.75rem;">
+            ${(shipment.deliveryPhotos && shipment.deliveryPhotos.length > 0) ? shipment.deliveryPhotos.map(img => `
+              <a href="${resolveProductImgUrl(img)}" target="_blank" style="border-radius: 0.5rem; overflow: hidden; height: 90px; border: 1px solid var(--border); display: block;">
+                <img src="${resolveProductImgUrl(img)}" style="width: 100%; height: 100%; object-fit: cover;">
+              </a>
+            `).join('') : '<p style="color: var(--text-muted); font-size: 0.85rem; grid-column: 1/-1;">No delivery proof photos attached to this dispatch.</p>'}
+          </div>
+        </div>
+
+        <!-- SECTION 5: MONTHLY INVOICES LEDGER (DUE, PAID, OVERDUE) -->
+        <div style="background: var(--bg-dark); border: 1px solid var(--border); padding: 1rem; border-radius: 0.75rem;">
+          <h4 style="color: var(--accent); margin-bottom: 0.5rem;">💵 Monthly Rental Invoices Ledger</h4>
+          ${invoices.length === 0 ? '<p style="color: var(--text-muted); font-size: 0.85rem;">No billing invoices generated yet for this rental agreement.</p>' : `
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Invoice ID</th>
+                  <th>Billing Date</th>
+                  <th>Total Amount</th>
+                  <th>Payment Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${invoices.map(inv => `
+                  <tr>
+                    <td><strong>${inv.id}</strong></td>
+                    <td>${inv.createdAt || 'N/A'}</td>
+                    <td><strong>$${(inv.amount || 0).toFixed(2)}</strong></td>
+                    <td>
+                      <span class="status-badge ${inv.status === 'Paid' ? 'status-active' : 'status-pending'}">${inv.status || 'UNPAID'}</span>
+                      ${inv.paymentMethod ? `<small style="display:block; color:var(--text-muted);">${inv.paymentMethod}</small>` : ''}
+                    </td>
+                    <td>
+                      <div style="display: flex; gap: 0.3rem;">
+                        <button class="btn btn-outline" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;" onclick="viewInvoiceDetailModal('${inv.id}')">👁️ View</button>
+                        <button class="btn btn-accent" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;" onclick="updateInvoicePaymentPrompt('${inv.id}')">💵 Pay</button>
+                      </div>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          `}
+        </div>
+
+      </div>
+    `;
+  }
+
+  if (footer) {
+    footer.innerHTML = `
+      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+        <button class="btn btn-outline" onclick="openRentalModal('${r.id}', 'extend')">📅 Extend Rental Date</button>
+        <button class="btn btn-primary" onclick="openRentalModal('${r.id}', 'pickup')">🚚 Schedule Pickup Transport</button>
+        ${r.status !== 'Returned' ? `<button class="btn btn-accent" onclick="checkinRental('${r.id}'); closeRentalDetailsModal();">📥 Check-In Equipment Return</button>` : ''}
+      </div>
+      <button class="btn btn-outline" onclick="closeRentalDetailsModal()">Close Details</button>
+    `;
+  }
+
+  modal.classList.add('active');
+}
+
+function closeRentalDetailsModal() {
+  const modal = document.getElementById('rentalDetailsModal');
+  if (modal) modal.classList.remove('active');
 }
 
 async function checkinRental(rentalId) {

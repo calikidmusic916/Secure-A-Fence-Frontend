@@ -232,6 +232,7 @@ function filterPurchaseCatalog(category) {
 // Interactive Fence Calculator
 function runCalculator() {
   const L = parseFloat(document.getElementById('calcLinearFeet').value) || 0;
+  const W = parseFloat(document.getElementById('calcPanelWidth').value) || 12;
   const M = parseInt(document.getElementById('calcMonths').value) || 1;
   const P = document.getElementById('calcPrivacy').checked ? 1 : 0;
   const G = parseInt(document.getElementById('calcGates').value) || 0;
@@ -262,8 +263,9 @@ function runCalculator() {
   // Minimum Order Logic
   const finalTotal = rawTotal < 300 ? 300 : rawTotal;
 
-  // Equipment Breakdown (calculating for 12ft wide 6x12 panels)
-  const panelsCount = Math.ceil(L / 12);
+  // Equipment Breakdown based on user-entered panel width in Ft (W)
+  const panelWidth = W > 0 ? W : 12;
+  const panelsCount = Math.ceil(L / panelWidth);
   const standsCount = panelsCount > 0 ? panelsCount + 1 : 0;
   const clipsCount = panelsCount;
 

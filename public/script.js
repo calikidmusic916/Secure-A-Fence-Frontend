@@ -109,7 +109,7 @@ function renderProductGrid(products) {
         <div class="product-specs">${p.specs}</div>
 
         <div class="qty-selector-catalog">
-          <label for="qty-${p.id}">Quantity:</label>
+          <label for="qty-${p.id}">Quantity (Units or LF):</label>
           <input type="number" id="qty-${p.id}" value="1" min="1" max="${p.inStock}" class="form-input qty-input-small">
         </div>
 
@@ -120,7 +120,7 @@ function renderProductGrid(products) {
           </div>
           <div style="text-align: right;">
             <span style="font-size:0.75rem; color:var(--text-muted); display:block;">RENTAL MONTHLY</span>
-            <span class="rental-price" style="font-weight:700; color:#38bdf8;">$${p.rentalPriceMonthly.toFixed(2)} / mo</span>
+            <span class="rental-price" style="font-weight:700; color:#38bdf8;">$${p.rentalPriceMonthly.toFixed(2)}${p.id.includes('linear') || p.id.includes('privacy') ? ' / LF' : ' / mo'}</span>
           </div>
         </div>
         <div class="card-actions">
@@ -313,7 +313,7 @@ function renderCartModal() {
         <img src="${imgUrl}" style="width: 45px; height: 45px; object-fit: contain;">
         <div class="cart-item-title">
           <div>${prod.name}</div>
-          <small style="color: var(--text-muted);">$${unitPrice.toFixed(2)} ${orderType === 'rental' ? '/ month' : 'each'}</small>
+          <small style="color: var(--text-muted);">$${unitPrice.toFixed(2)} ${orderType === 'rental' ? (prod.id.includes('linear') || prod.id.includes('privacy') ? '/ LF / month' : '/ month') : 'each'}</small>
         </div>
         <div class="qty-control">
           <button class="qty-btn" onclick="changeCartQty('${item.productId}', -1)">-</button>

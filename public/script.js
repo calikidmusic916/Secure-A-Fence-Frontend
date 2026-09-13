@@ -138,11 +138,12 @@ function renderProductGrid(products) {
   }
 
   container.innerHTML = rentalProducts.map(p => {
-    const rentalPrice = getDisplayRentalPrice(p);
+    const hasPrice = p.rentalPriceMonthly && parseFloat(p.rentalPriceMonthly) > 0;
 
     return `
-      <div class="product-card">
+      <div class="product-card ${hasPrice ? '' : 'unavailable'}">
         <div class="product-img-wrapper">
+          ${hasPrice ? '' : '<div class="unavailable-overlay-badge">✖ Not For Rent</div>'}
           <img src="${resolveProductImgUrl(p.image)}" alt="${p.name}" class="product-img">
         </div>
         <div class="product-body">
@@ -157,13 +158,17 @@ function renderProductGrid(products) {
             </div>
             <div style="text-align: right;">
               <span style="font-size:0.75rem; color:var(--text-muted); display:block;">MONTHLY RATE</span>
-              <span class="rental-price" style="font-weight:700; color:#38bdf8;">$${rentalPrice.toFixed(2)} ${p.type === 'gate' ? '/ gate / mo' : '/ LF / mo'}</span>
+              ${hasPrice ? `<span class="rental-price" style="font-weight:700; color:#38bdf8;">$${parseFloat(p.rentalPriceMonthly).toFixed(2)} ${p.type === 'gate' ? '/ gate / mo' : '/ LF / mo'}</span>` : '<span style="color: #f87171; font-weight: 700; font-size: 0.9rem;">$0.00</span>'}
             </div>
           </div>
 
-          <div class="card-actions" style="margin-top: auto;">
-            <button class="btn btn-primary" style="grid-column: 1 / -1; width: 100%;" onclick="switchView('calc-view')">Fence Rental Quote</button>
-          </div>
+          ${hasPrice ? `
+            <div class="card-actions" style="margin-top: auto;">
+              <button class="btn btn-primary" style="grid-column: 1 / -1; width: 100%;" onclick="switchView('calc-view')">Fence Rental Quote</button>
+            </div>
+          ` : `
+            <div class="unavailable-banner">❌ Unavailable for Rental</div>
+          `}
         </div>
       </div>
     `;
@@ -183,11 +188,12 @@ function renderPurchaseGrid(products) {
   }
 
   container.innerHTML = purchaseProducts.map(p => {
-    const salePrice = getDisplaySalePrice(p);
+    const hasPrice = p.salePrice && parseFloat(p.salePrice) > 0;
 
     return `
-      <div class="product-card">
+      <div class="product-card ${hasPrice ? '' : 'unavailable'}">
         <div class="product-img-wrapper">
+          ${hasPrice ? '' : '<div class="unavailable-overlay-badge">✖ Not For Sale</div>'}
           <img src="${resolveProductImgUrl(p.image)}" alt="${p.name}" class="product-img">
         </div>
         <div class="product-body">
@@ -202,18 +208,22 @@ function renderPurchaseGrid(products) {
             </div>
             <div style="text-align: right;">
               <span style="font-size:0.75rem; color:var(--text-muted); display:block;">UNIT PRICE</span>
-              <span class="sale-price" style="font-weight:800; color:var(--accent); font-size:1.2rem;">$${salePrice.toFixed(2)} / unit</span>
+              ${hasPrice ? `<span class="sale-price" style="font-weight:800; color:var(--accent); font-size:1.2rem;">$${parseFloat(p.salePrice).toFixed(2)} / unit</span>` : '<span style="color: #f87171; font-weight: 700; font-size: 0.9rem;">$0.00</span>'}
             </div>
           </div>
 
-          <div class="qty-selector-catalog" style="margin-top: auto;">
-            <span>Qty:</span>
-            <input type="number" id="qty-p-${p.id}" class="form-input qty-input-small" value="1" min="1">
-          </div>
+          ${hasPrice ? `
+            <div class="qty-selector-catalog" style="margin-top: auto;">
+              <span>Qty:</span>
+              <input type="number" id="qty-p-${p.id}" class="form-input qty-input-small" value="1" min="1">
+            </div>
 
-          <div class="card-actions" style="margin-top: 0.5rem;">
-            <button class="btn btn-primary" style="grid-column: 1 / -1;" onclick="handleAddToCartFromCatalog('${p.id}', 'sale', 'qty-p-${p.id}')">🛒 Add Purchase to Cart</button>
-          </div>
+            <div class="card-actions" style="margin-top: 0.5rem;">
+              <button class="btn btn-primary" style="grid-column: 1 / -1;" onclick="handleAddToCartFromCatalog('${p.id}', 'sale', 'qty-p-${p.id}')">🛒 Add Purchase to Cart</button>
+            </div>
+          ` : `
+            <div class="unavailable-banner">❌ Unavailable for Purchase</div>
+          `}
         </div>
       </div>
     `;

@@ -101,31 +101,24 @@ function renderProductGrid(products) {
   container.innerHTML = products.map(p => `
     <div class="product-card">
       <div class="product-img-wrapper">
-        <span class="stock-tag">In Yard: ${p.inStock} units</span>
         <img src="${p.image.startsWith('/') ? API_BASE + p.image : p.image}" alt="${p.name}" class="product-img">
       </div>
       <div class="product-body">
         <h3 class="product-name">${p.name}</h3>
         <div class="product-specs">${p.specs}</div>
 
-        <div class="qty-selector-catalog">
-          <label for="qty-${p.id}">Quantity (Units or LF):</label>
-          <input type="number" id="qty-${p.id}" value="1" min="1" max="${p.inStock}" class="form-input qty-input-small">
-        </div>
-
-        <div class="product-prices">
+        <div class="product-prices" style="border-top: none; padding-top: 0; margin-bottom: 0.5rem;">
           <div>
-            <span style="font-size:0.75rem; color:var(--text-muted); display:block;">OUTRIGHT PURCHASE</span>
-            <span class="sale-price">$${p.salePrice.toFixed(2)}</span>
+            <span style="font-size:0.75rem; color:var(--text-muted); display:block;">SERVICE</span>
+            <span class="sale-price" style="font-size: 1rem; color: #fff;">Jobsite Rental</span>
           </div>
           <div style="text-align: right;">
-            <span style="font-size:0.75rem; color:var(--text-muted); display:block;">RENTAL MONTHLY</span>
-            <span class="rental-price" style="font-weight:700; color:#38bdf8;">$${p.rentalPriceMonthly.toFixed(2)}${p.id.includes('linear') || p.id.includes('privacy') ? ' / LF' : ' / mo'}</span>
+            <span style="font-size:0.75rem; color:var(--text-muted); display:block;">RATE</span>
+            <span class="rental-price" style="font-weight:700; color:#38bdf8;">$${p.rentalPriceMonthly.toFixed(2)}${p.id.includes('linear') || p.id.includes('privacy') ? ' / LF / mo' : ' / mo'}</span>
           </div>
         </div>
-        <div class="card-actions">
-          <button class="btn btn-accent" onclick="handleAddToCartFromCatalog('${p.id}', 'sale')">Buy Now</button>
-          <button class="btn btn-primary" onclick="handleAddToCartFromCatalog('${p.id}', 'rental')">Rent Now</button>
+        <div class="card-actions" style="margin-top: auto;">
+          <button class="btn btn-primary" style="grid-column: 1 / -1;" onclick="switchView('calc-view')">Calculate My Project</button>
         </div>
       </div>
     </div>

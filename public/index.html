@@ -195,68 +195,6 @@
         </div>
       </div>
 
-      <!-- CUSTOM GATE & DOOR DESIGNER CARD -->
-      <div class="calc-card" style="margin-top: 2rem;">
-        <h3 style="margin-bottom: 0.5rem; color: #fff;">🚪 Custom Built Gate &amp; Door Designer</h3>
-        <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.9rem;">
-          Configure custom built-in access doors or vehicle swing gates into your temporary fence panels for an extra fee. Select your gate style and heavy-duty hardware below.
-        </p>
-        <div class="calc-grid">
-          <div>
-            <div class="form-group">
-              <label class="form-label">Gate / Door Style</label>
-              <select id="gateStyle" class="form-select" onchange="updateGateDesigner()">
-                <option value="none">-- Select Gate Style --</option>
-                <option value="pedestrian">3ft Built-In Pedestrian Access Door (+$75 buy / +$15/mo rent)</option>
-                <option value="single-swing">Full Single Swing Vehicle Gate Panel (+$120 buy / +$25/mo rent)</option>
-                <option value="double-swing">Double Swing Vehicle Gate Pair (+$220 buy / +$45/mo rent)</option>
-              </select>
-            </div>
-
-            <div class="form-group" id="gateHardwareGroup" style="display: none;">
-              <label class="form-label">Optional Gate Hardware Accessories</label>
-              <div style="background: var(--bg-dark); padding: 0.75rem 1rem; border-radius: 0.5rem; border: 1px solid var(--border);">
-                <label style="display: block; margin-bottom: 0.5rem; cursor: pointer;">
-                  <input type="checkbox" id="gatePadlockLatch" onchange="updateGateDesigner()"> Heavy-Duty Padlock Latch (+$15 buy / +$3/mo rent)
-                </label>
-                <label style="display: block; margin-bottom: 0.5rem; cursor: pointer;">
-                  <input type="checkbox" id="gateDropRod" onchange="updateGateDesigner()"> Ground Drop-Rod Pin (+$25 buy / +$5/mo rent)
-                </label>
-                <label style="display: block; cursor: pointer;">
-                  <input type="checkbox" id="gateWheel" onchange="updateGateDesigner()"> Locking Gate Support Wheel (+$35 buy / +$7/mo rent)
-                </label>
-              </div>
-            </div>
-
-            <div class="form-group" id="gateQtyGroup" style="display: none;">
-              <label class="form-label">Gate Quantity</label>
-              <input type="number" id="gateQuantity" class="form-input" value="1" min="1" max="10" oninput="updateGateDesigner()">
-            </div>
-
-            <div class="form-group" id="gateOrderTypeGroup" style="display: none;">
-              <label class="form-label">Acquisition Mode</label>
-              <select id="gateOrderType" class="form-select" onchange="updateGateDesigner()">
-                <option value="sale">Outright Purchase</option>
-                <option value="rental">Monthly Rental</option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <h4 style="color: var(--accent); margin-bottom: 0.5rem;">Visual Configuration Preview</h4>
-            <div id="gateVisualPreview" style="background: var(--bg-dark); border: 1px solid var(--border); padding: 1rem; border-radius: 0.75rem; text-align: center; height: 170px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden;">
-              <span style="color: var(--text-muted); font-size: 0.9rem;">Select a gate style to view preview</span>
-            </div>
-
-            <div class="calc-results" id="gateResultsBox" style="margin-top: 1rem; display: none;">
-              <div class="result-item"><span>Selected Gate &amp; Hardware:</span><strong id="resGateSummary">Pedestrian Door</strong></div>
-              <div class="result-item"><span>Total Customization Cost:</span><strong id="resGateTotal" style="color: var(--accent); font-size: 1.2rem;">$75.00</strong></div>
-              <button class="btn btn-accent" style="width: 100%; margin-top: 0.75rem;" onclick="addCustomGateToCart()">🛒 Add Custom Gate to Cart</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
     </section>
 
     <!-- PAGE VIEW 3: DELIVERY INFO -->

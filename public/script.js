@@ -1071,31 +1071,68 @@ async function loadAdminShipmentsTable() {
 
   if (res.ok) {
     adminShipmentsData = await res.json();
-    const tbody = document.getElementById('adminShipmentsTableBody');
-    if (!tbody) return;
+    const activeTbody = document.getElementById('adminShipmentsTableBody');
+    const deliveredTbody = document.getElementById('adminDeliveredShipmentsTableBody');
 
-    tbody.innerHTML = adminShipmentsData.map(s => `
-      <tr>
-        <td><input type="checkbox" class="shipment-check" value="${s.id}"></td>
-        <td><strong>${s.id}</strong></td>
-        <td><span style="color:var(--accent); font-weight:bold;">${s.type}</span></td>
-        <td>${s.orderId}</td>
-        <td>${s.driverName || 'Unassigned'}</td>
-        <td>${s.dispatchDate}</td>
-        <td>
-          ${s.destination}<br>
-          <a href="javascript:void(0)" onclick="openShipmentMapModal('${encodeURIComponent(s.destination)}', '${s.id}')" style="color: var(--accent); font-size: 0.8rem; font-weight: bold; text-decoration: none;">📍 View Google Map</a>
-        </td>
-        <td><span class="status-badge status-${s.status.toLowerCase().replace(/\s+/g, '')}">${s.status}</span></td>
-        <td>
-          <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
-            <button class="btn btn-accent" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;" onclick="openShipmentMapModal('${encodeURIComponent(s.destination)}', '${s.id}')">🗺️ Map</button>
-            <button class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;" onclick="updateShipmentPrompt('${s.id}')">✏️ Edit</button>
-            <button class="btn btn-danger" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; background: var(--warning); color: #fff;" onclick="deleteShipmentRecord('${s.id}')">Delete</button>
-          </div>
-        </td>
-      </tr>
-    `).join('');
+    const activeShipments = adminShipmentsData.filter(s => (s.status || '').toLowerCase() !== 'delivered' && (s.status || '').toLowerCase() !== 'returned');
+    const deliveredShipments = adminShipmentsData.filter(s => (s.status || '').toLowerCase() === 'delivered' || (s.status || '').toLowerCase() === 'returned');
+
+    if (activeTbody) {
+      activeTbody.innerHTML = activeShipments.length === 0 ? `<tr><td colspan="9" style="text-align:center; color:var(--text-muted);">No active scheduled dispatches.</td></tr>` :
+        activeShipments.map(s => {
+          const photosCount = (s.deliveryPhotos || []).length;
+          return `
+            <tr>
+              <td><input type="checkbox" class="shipment-check" value="${s.id}"></td>
+              <td><strong>${s.id}</strong></td>
+              <td><span style="color:var(--accent); font-weight:bold;">${s.type}</span></td>
+              <td>${s.orderId}</td>
+              <td>${s.driverName || 'Unassigned'}</td>
+              <td>${s.dispatchDate}</td>
+              <td>
+                ${s.destination}<br>
+                <a href="javascript:void(0)" onclick="openShipmentMapModal('${encodeURIComponent(s.destination)}', '${s.id}')" style="color: var(--accent); font-size: 0.8rem; font-weight: bold; text-decoration: none;">📍 View Google Map</a>
+              </td>
+              <td><span class="status-badge status-${s.status.toLowerCase().replace(/\s+/g, '')}">${s.status}</span></td>
+              <td>
+                <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+                  <button class="btn btn-accent" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;" onclick="openShipmentMapModal('${encodeURIComponent(s.destination)}', '${s.id}')">🗺️ Map</button>
+                  <button class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;" onclick="openShipmentPhotosModal('${s.id}')">📷 Proof (${photosCount})</button>
+                  <button class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;" onclick="updateShipmentPrompt('${s.id}')">✏️ Edit / Deliver</button>
+                  <button class="btn btn-danger" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; background: var(--warning); color: #fff;" onclick="deleteShipmentRecord('${s.id}')">Delete</button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+    }
+
+    if (deliveredTbody) {
+      deliveredTbody.innerHTML = deliveredShipments.length === 0 ? `<tr><td colspan="8" style="text-align:center; color:var(--text-muted);">No delivered shipments yet.</td></tr>` :
+        deliveredShipments.map(s => {
+          const photosCount = (s.deliveryPhotos || []).length;
+          return `
+            <tr>
+              <td><strong>${s.id}</strong></td>
+              <td><span style="color:var(--success); font-weight:bold;">${s.type}</span></td>
+              <td>${s.orderId}</td>
+              <td>${s.driverName || 'Driver'}</td>
+              <td>${s.dispatchDate}</td>
+              <td>
+                ${s.destination}<br>
+                <a href="javascript:void(0)" onclick="openShipmentMapModal('${encodeURIComponent(s.destination)}', '${s.id}')" style="color: var(--accent); font-size: 0.8rem; font-weight: bold; text-decoration: none;">📍 Google Map</a>
+              </td>
+              <td><span class="status-badge status-delivered">${s.status.toUpperCase()}</span></td>
+              <td>
+                <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+                  <button class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;" onclick="openShipmentPhotosModal('${s.id}')">📷 Proof &amp; Notes (${photosCount})</button>
+                  <button class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;" onclick="updateShipmentPrompt('${s.id}')">✏️ Edit Status</button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+    }
   }
 }
 
@@ -1147,6 +1184,120 @@ async function updateShipmentPrompt(shipmentId) {
       },
       body: JSON.stringify({ driverName: driver, status, notes })
     });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      if (data.invoiceCreated) {
+        alert(`🎉 Shipment marked Delivered! Invoice ${data.invoiceCreated.id} auto-generated and added to Invoices Panel!`);
+      } else {
+        alert('Shipment record updated!');
+      }
+      loadAdminShipmentsTable();
+      loadAdminInvoicesTable();
+      loadAdminSalesTable();
+    } else {
+      alert('Failed to update shipment: ' + (data.error || 'Unknown error'));
+    }
+  } catch (e) {
+    alert('Error updating shipment.');
+  }
+}
+
+// Delivery Proof Photos & Notes Functions
+function openShipmentPhotosModal(shipmentId) {
+  const modal = document.getElementById('shipmentPhotosModal');
+  document.getElementById('targetShipmentIdForPhotos').value = shipmentId;
+
+  const s = adminShipmentsData.find(item => item.id === shipmentId);
+  if (s) {
+    if (document.getElementById('shipmentPhotosModalTitle')) {
+      document.getElementById('shipmentPhotosModalTitle').innerText = `Proof Photos & Notes (${s.id})`;
+    }
+    if (document.getElementById('shipmentNotesInput')) {
+      document.getElementById('shipmentNotesInput').value = s.notes || '';
+    }
+
+    renderShipmentPhotosGallery(s);
+  }
+
+  modal.classList.add('active');
+}
+
+function closeShipmentPhotosModal() {
+  document.getElementById('shipmentPhotosModal').classList.remove('active');
+}
+
+function renderShipmentPhotosGallery(shipment) {
+  const container = document.getElementById('shipmentPhotosGallery');
+  if (!container) return;
+
+  const photos = shipment.deliveryPhotos || [];
+  if (photos.length === 0) {
+    container.innerHTML = `<p style="grid-column: 1/-1; color: var(--text-muted); font-size: 0.85rem;">No delivery proof photos uploaded yet.</p>`;
+    return;
+  }
+
+  container.innerHTML = photos.map((img, idx) => `
+    <div style="position: relative; border-radius: 0.5rem; overflow: hidden; border: 1px solid var(--border); background: var(--bg-dark); height: 110px;">
+      <a href="${resolveProductImgUrl(img)}" target="_blank">
+        <img src="${resolveProductImgUrl(img)}" style="width: 100%; height: 100%; object-fit: cover;">
+      </a>
+    </div>
+  `).join('');
+}
+
+async function saveShipmentNotes() {
+  const shipmentId = document.getElementById('targetShipmentIdForPhotos').value;
+  const notes = document.getElementById('shipmentNotesInput').value;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/shipments/${shipmentId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`
+      },
+      body: JSON.stringify({ notes })
+    });
+
+    if (res.ok) {
+      alert('Driver / delivery notes saved!');
+      loadAdminShipmentsTable();
+    }
+  } catch (e) {
+    alert('Error saving notes.');
+  }
+}
+
+async function uploadShipmentPhotoFile(event) {
+  const shipmentId = document.getElementById('targetShipmentIdForPhotos').value;
+  const file = event.target.files[0];
+  if (!file || !shipmentId) return;
+
+  const formData = new FormData();
+  formData.append('photo', file);
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/shipments/${shipmentId}/photos`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${authToken}` },
+      body: formData
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      alert('📸 Delivery proof photo uploaded successfully!');
+      loadAdminShipmentsTable();
+      const updatedS = adminShipmentsData.find(item => item.id === shipmentId);
+      if (updatedS) renderShipmentPhotosGallery(updatedS);
+    } else {
+      alert('Failed to upload photo: ' + (data.error || 'Unknown error'));
+    }
+  } catch (e) {
+    alert('Error uploading delivery proof photo.');
+  }
+}
 
     if (res.ok) {
       alert('Shipment record updated!');

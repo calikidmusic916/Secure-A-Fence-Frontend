@@ -454,7 +454,7 @@
 
         <div id="routeOptimizationSummary" style="display: none; background: var(--bg-dark); border: 1px solid var(--accent); padding: 1rem; border-radius: 0.75rem; margin-bottom: 1.5rem;">
           <h4 style="color: var(--accent); margin-bottom: 0.5rem;">📍 Optimized Delivery Sequence</h4>
-          <div id="routeSummaryStats" style="font-size: 0.9rem; color: var(--text-main); margin-bottom: 0.75rem; display: gap: 2rem;">
+          <div id="routeSummaryStats" style="font-size: 0.9rem; color: var(--text-main); margin-bottom: 0.75rem;">
             <!-- Stats like Total Miles/Time -->
           </div>
           <div id="routeStopsList" style="display: flex; flex-direction: column; gap: 0.5rem;">
@@ -462,6 +462,8 @@
           </div>
         </div>
 
+        <!-- ACTIVE DISPATCHES -->
+        <h4 style="color: #fff; margin-bottom: 0.75rem;">🚚 Active / Scheduled Dispatches</h4>
         <div class="table-responsive">
           <table class="data-table">
             <thead>
@@ -478,6 +480,28 @@
               </tr>
             </thead>
             <tbody id="adminShipmentsTableBody">
+              <!-- Loaded via JavaScript -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- DELIVERED & COMPLETED SHIPMENTS -->
+        <h4 style="color: var(--success); margin-top: 2rem; margin-bottom: 0.75rem;">✅ Delivered &amp; Completed Shipments (Invoiced)</h4>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Shipment ID</th>
+                <th>Type</th>
+                <th>Order Ref</th>
+                <th>Driver / Truck</th>
+                <th>Delivered Date</th>
+                <th>Destination Address</th>
+                <th>Status</th>
+                <th>Proof &amp; Actions</th>
+              </tr>
+            </thead>
+            <tbody id="adminDeliveredShipmentsTableBody">
               <!-- Loaded via JavaScript -->
             </tbody>
           </table>
@@ -954,6 +978,40 @@
         <button class="btn btn-primary" onclick="submitRentalAction()">Confirm Action</button>
       </div>
     </div>
+  </div>
+
+  <!-- DELIVERY PROOF PHOTOS & NOTES MODAL -->
+  <div class="modal-overlay" id="shipmentPhotosModal">
+    <div class="modal-card" style="max-width: 700px;">
+      <div class="modal-header">
+        <h3 id="shipmentPhotosModalTitle">Delivery Proof Photos &amp; Driver Notes</h3>
+        <button class="close-btn" onclick="closeShipmentPhotosModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="targetShipmentIdForPhotos">
+
+        <div class="form-group">
+          <label class="form-label">Driver / Logistics Notes</label>
+          <textarea id="shipmentNotesInput" class="form-textarea" rows="2" placeholder="Driver notes, gate access details, jobsite setup notes..."></textarea>
+          <button class="btn btn-outline" style="margin-top: 0.5rem; font-size: 0.85rem;" onclick="saveShipmentNotes()">Save Notes</button>
+        </div>
+
+        <div style="margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1rem;">
+          <h4 style="color: #fff; margin-bottom: 0.75rem;">📸 Delivery Proof Photos</h4>
+          <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem;">
+            <input type="file" id="shipmentPhotoFile" style="display: none;" accept="image/*" onchange="uploadShipmentPhotoFile(event)">
+            <button class="btn btn-accent" onclick="document.getElementById('shipmentPhotoFile').click()">📷 Add Delivery Photo</button>
+          </div>
+          <div id="shipmentPhotosGallery" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 1rem;">
+            <!-- Photos injected dynamically -->
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeShipmentPhotosModal()">Close</button>
+      </div>
+    </div>
+  </div>
   </div>
 
   <!-- GOOGLE MAPS SHIPMENT LOCATION MODAL -->

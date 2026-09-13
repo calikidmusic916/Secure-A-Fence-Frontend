@@ -192,6 +192,17 @@ function runCalculator() {
   // Minimum Order Logic
   const finalTotal = rawTotal < 300 ? 300 : rawTotal;
 
+  // Equipment Breakdown (assuming 10ft panels standard for math visualization)
+  const panelsCount = Math.ceil(L / 10);
+  const standsCount = panelsCount > 0 ? panelsCount + 1 : 0;
+  const clipsCount = panelsCount;
+
+  if (document.getElementById('resPanelsCount')) {
+    document.getElementById('resPanelsCount').innerText = `${panelsCount} Panels`;
+    document.getElementById('resStandsCount').innerText = `${standsCount} Stands`;
+    document.getElementById('resClipsCount').innerText = `${clipsCount} Clips`;
+  }
+
   document.getElementById('resSetupTotal').innerText = `$${setupTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   document.getElementById('resMonthlyTotal').innerText = `$${totalMonthly.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / month`;
   document.getElementById('resMonthsSpan').innerText = M;

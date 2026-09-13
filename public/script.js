@@ -470,6 +470,15 @@ function renderCartModal() {
       appliedMinimum = true;
     }
 
+    // Equipment breakdown for rental order delivery
+    const panelsCount = Math.ceil(totalLf / 12);
+    const standsCount = panelsCount > 0 ? panelsCount + 1 : 0;
+    const clipsCount = panelsCount;
+
+    if (document.getElementById('cartEquipmentBreakdown')) {
+      document.getElementById('cartEquipmentBreakdown').innerText = `${panelsCount} Panels | ${standsCount} Stands | ${clipsCount} Clips`;
+    }
+
     if (document.getElementById('cartSetupVal')) document.getElementById('cartSetupVal').innerText = `$${totalSetup.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     if (document.getElementById('cartMonthlyVal')) document.getElementById('cartMonthlyVal').innerText = `$${totalMonthly.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / mo`;
     document.getElementById('cartTotalVal').innerText = `$${grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;

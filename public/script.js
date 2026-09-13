@@ -548,13 +548,46 @@ function renderCartModal() {
       if (prod) subtotal += prod.salePrice * item.quantity;
     });
 
-    const tax = Math.round(subtotal * 0.08 * 100) / 100;
+    const isTaxable = currentUser && currentUser.isTaxable !== undefined ? currentUser.isTaxable !== false : true;
+    const tax = isTaxable ? Math.round(subtotal * 0.08 * 100) / 100 : 0;
     const total = subtotal + delivery + tax;
 
     document.getElementById('cartSubtotalVal').innerText = `$${subtotal.toFixed(2)}`;
     document.getElementById('cartDeliveryFeeVal').innerText = `$${delivery.toFixed(2)}`;
-    document.getElementById('cartTaxVal').innerText = `$${tax.toFixed(2)}`;
+    document.getElementById('cartTaxVal').innerText = `$${tax.toFixed(2)}${isTaxable ? '' : ' (Tax Exempt)'}`;
     document.getElementById('cartTotalVal').innerText = `$${total.toFixed(2)}`;
+  }
+
+  // Populate saved jobsites dropdown if customer is logged in
+  const savedGroup = document.getElementById('savedJobsitesGroup');
+  const jobsiteSelect = document.getElementById('checkoutJobsiteSelect');
+
+  if (currentUser && currentUser.jobsites && currentUser.jobsites.length > 0 && savedGroup && jobsiteSelect) {
+    savedGroup.style.display = 'block';
+    if (jobsiteSelect.children.length <= 1) {
+      jobsiteSelect.innerHTML = `<option value="">➕ Enter / Create New Jobsite...</option>` +
+        currentUser.jobsites.map(j => `<option value="${j.id}">${j.name} (${j.address})</option>`).join('');
+    }
+  } else if (savedGroup) {
+    savedGroup.style.display = 'none';
+  }
+}
+
+function onJobsiteSelectChange() {
+  const select = document.getElementById('checkoutJobsiteSelect');
+  if (!select || !currentUser || !currentUser.jobsites) return;
+
+  const siteId = select.value;
+  if (!siteId) return;
+
+  const site = currentUser.jobsites.find(j => j.id === siteId);
+  if (site) {
+    if (document.getElementById('checkoutJobsiteName')) document.getElementById('checkoutJobsiteName').value = site.name || '';
+    if (document.getElementById('checkoutAddress')) document.getElementById('checkoutAddress').value = site.address || '';
+    if (document.getElementById('checkoutDistance')) document.getElementById('checkoutDistance').value = site.deliveryDistanceMiles || 15;
+    if (document.getElementById('checkoutContact')) document.getElementById('checkoutContact').value = site.contactName ? `${site.contactName} (${site.contactPhone || ''})` : '';
+    if (document.getElementById('checkoutInstructions')) document.getElementById('checkoutInstructions').value = site.specialInstructions || '';
+    renderCartModal();
   }
 }
 
@@ -592,16 +625,20 @@ async function submitCheckout() {
   }
 
   const orderType = document.getElementById('cartOrderType').value;
+  const jobsiteName = document.getElementById('checkoutJobsiteName')?.value || '';
   const deliveryAddress = document.getElementById('checkoutAddress').value;
   const deliveryDistance = document.getElementById('checkoutDistance').value;
   const jobsiteContact = document.getElementById('checkoutContact').value;
+  const specialInstructions = document.getElementById('checkoutInstructions')?.value || '';
   const startDate = document.getElementById('checkoutStartDate').value;
 
   const payload = {
     orderType,
+    jobsiteName,
     deliveryAddress,
     deliveryDistance,
     jobsiteContact,
+    specialInstructions,
     startDate
   };
 

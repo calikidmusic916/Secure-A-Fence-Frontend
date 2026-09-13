@@ -630,8 +630,16 @@
         </div>
 
         <h4 style="margin-top: 1.5rem; margin-bottom: 0.75rem;">Delivery &amp; Jobsite Logistics</h4>
+        <div class="form-group" id="savedJobsitesGroup" style="display: none;">
+          <label class="form-label">Select Saved Jobsite</label>
+          <select id="checkoutJobsiteSelect" class="form-select" onchange="onJobsiteSelectChange()"></select>
+        </div>
         <div class="form-group">
-          <label class="form-label">Jobsite Delivery Address</label>
+          <label class="form-label">Jobsite Name</label>
+          <input type="text" id="checkoutJobsiteName" class="form-input" placeholder="e.g. Sacramento Tower B Project" value="Sacramento Jobsite B">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Jobsite Physical Delivery Address</label>
           <input type="text" id="checkoutAddress" class="form-input" placeholder="100 Construction Way, Site Gate B, City, State" value="Sacramento, CA">
         </div>
         <div class="form-group">
@@ -642,6 +650,10 @@
         <div class="form-group">
           <label class="form-label">On-Site Contact Person &amp; Phone</label>
           <input type="text" id="checkoutContact" class="form-input" placeholder="Mike Davis (555-0192)" value="Mike Davis (555-987-6543)">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Special Delivery / Gate Access Instructions</label>
+          <textarea id="checkoutInstructions" class="form-textarea" rows="2" placeholder="Gate B code 1234, forklift access, contact supervisor before arrival..."></textarea>
         </div>
         <div class="form-group" id="rentalDatesGroup">
           <label class="form-label">Target Delivery / Rental Start Date</label>

@@ -549,6 +549,7 @@
                 <th>Company</th>
                 <th>Phone</th>
                 <th>Role</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody id="adminCustomersTableBody">
@@ -755,14 +756,15 @@
     </div>
   </div>
 
-  <!-- CUSTOMER ADD MODAL -->
+  <!-- CUSTOMER ADD/EDIT MODAL -->
   <div class="modal-overlay" id="customerModal">
     <div class="modal-card">
       <div class="modal-header">
-        <h3>Add New Customer</h3>
+        <h3 id="customerModalTitle">Add New Customer</h3>
         <button class="close-btn" onclick="closeCustomerModal()">&times;</button>
       </div>
       <div class="modal-body">
+        <input type="hidden" id="editCustomerId">
         <div class="form-group">
           <label class="form-label">Full Name</label>
           <input type="text" id="newCustName" class="form-input" placeholder="e.g. John Doe">
@@ -780,16 +782,89 @@
           <input type="text" id="newCustPhone" class="form-input" placeholder="555-123-4567">
         </div>
         <div class="form-group">
+          <label class="form-label">Business / Billing Address</label>
+          <input type="text" id="newCustBusinessAddress" class="form-input" placeholder="100 Corporate Blvd, Sacramento, CA">
+        </div>
+        <div class="form-group">
           <label class="form-label">User Role</label>
           <select id="newCustRole" class="form-select">
             <option value="customer">Customer (Website Access)</option>
             <option value="admin">Administrator (Full Access)</option>
           </select>
         </div>
+        <div class="form-group" style="margin-top: 1rem;">
+          <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: #fff;">
+            <input type="checkbox" id="newCustIsTaxable" checked> Taxable Customer (Applies 8% Sales Tax)
+          </label>
+        </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-outline" onclick="closeCustomerModal()">Cancel</button>
-        <button class="btn btn-accent" onclick="saveCustomer()">Create Customer</button>
+        <button class="btn btn-accent" onclick="saveCustomer()">Save Customer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CUSTOMER JOBSITES MANAGEMENT MODAL -->
+  <div class="modal-overlay" id="jobsitesManageModal">
+    <div class="modal-card" style="max-width: 750px;">
+      <div class="modal-header">
+        <h3 id="jobsitesManageTitle">Customer Jobsites</h3>
+        <button class="close-btn" onclick="closeJobsitesManageModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="targetJobsitesCustomerId">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <p style="color: var(--text-muted); margin: 0;">Manage construction sites, site contacts, delivery instructions, and active deployed rentals.</p>
+          <button class="btn btn-accent" onclick="openJobsiteEditModal()">➕ Add Jobsite</button>
+        </div>
+        <div id="jobsitesListContainer">
+          <!-- Jobsites injected dynamically -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeJobsitesManageModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JOBSITE ADD/EDIT MODAL -->
+  <div class="modal-overlay" id="jobsiteEditModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="jobsiteEditTitle">Add New Jobsite</h3>
+        <button class="close-btn" onclick="closeJobsiteEditModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editJobsiteId">
+        <div class="form-group">
+          <label class="form-label">Jobsite Name</label>
+          <input type="text" id="siteName" class="form-input" placeholder="e.g. Tower Site B / Sacramento Yard">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Physical Jobsite Address</label>
+          <input type="text" id="siteAddress" class="form-input" placeholder="500 Construction Way, Sacramento, CA">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Site Contact Person Name</label>
+          <input type="text" id="siteContactName" class="form-input" placeholder="e.g. Mike Davis">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Site Contact Phone Number</label>
+          <input type="text" id="siteContactPhone" class="form-input" placeholder="555-987-6543">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Special Delivery / Gate Instructions</label>
+          <textarea id="siteInstructions" class="form-textarea" rows="2" placeholder="Gate B code 1234, forklift on site, call contact before arrival..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Delivery Distance from Warehouse Yard (Miles)</label>
+          <input type="number" id="siteDistance" class="form-input" value="15" min="0" placeholder="e.g. 15">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeJobsiteEditModal()">Cancel</button>
+        <button class="btn btn-accent" onclick="saveJobsite()">Save Jobsite</button>
       </div>
     </div>
   </div>

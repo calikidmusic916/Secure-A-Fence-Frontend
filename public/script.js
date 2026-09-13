@@ -1428,6 +1428,8 @@ async function saveInvoice() {
 
 // --- ADMIN CUSTOMER MANAGEMENT ---
 
+let adminCustomersData = [];
+
 async function loadAdminCustomersTable() {
   try {
     const res = await fetch(`${API_BASE}/api/admin/customers`, {
@@ -1435,31 +1437,75 @@ async function loadAdminCustomersTable() {
     });
 
     if (res.ok) {
-      const customers = await res.json();
+      adminCustomersData = await res.json();
       const tbody = document.getElementById('adminCustomersTableBody');
       if (!tbody) return;
 
-      tbody.innerHTML = customers.map(c => `
-        <tr>
-          <td><strong>${c.name}</strong></td>
-          <td>${c.email}</td>
-          <td>${c.company || 'N/A'}</td>
-          <td>${c.phone || 'N/A'}</td>
-          <td><span class="status-badge status-delivered">${c.role.toUpperCase()}</span></td>
-        </tr>
-      `).join('');
+      tbody.innerHTML = adminCustomersData.map(c => {
+        const jobsCount = c.jobsites ? c.jobsites.length : 0;
+        const taxStatus = c.isTaxable !== false ? '<span style="color:#34d399;">Taxable (8%)</span>' : '<span style="color:#fbbf24;">Tax Exempt</span>';
+
+        return `
+          <tr>
+            <td>
+              <strong>${c.name}</strong><br>
+              <small style="color: var(--text-muted);">${c.businessAddress || 'No HQ Address'}</small>
+            </td>
+            <td>${c.email}</td>
+            <td>${c.company || 'N/A'}</td>
+            <td>${c.phone || 'N/A'}</td>
+            <td>
+              <span class="status-badge status-delivered">${c.role ? c.role.toUpperCase() : 'CUSTOMER'}</span><br>
+              <small>${taxStatus}</small>
+            </td>
+            <td>
+              <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+                <button class="btn btn-accent" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;" onclick="openJobsitesManageModal('${c.id}')">🏗️ Jobsites (${jobsCount})</button>
+                <button class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;" onclick="openCustomerModal('${c.id}')">Edit</button>
+                <button class="btn btn-danger" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; background: var(--warning); color: #fff;" onclick="deleteCustomer('${c.id}')">Delete</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
     }
   } catch (e) {
     console.error('Error loading customers', e);
   }
 }
 
-function openCustomerModal() {
+function openCustomerModal(customerId = null) {
+  const modal = document.getElementById('customerModal');
+  const title = document.getElementById('customerModalTitle');
+  const idInput = document.getElementById('editCustomerId');
+
   document.getElementById('newCustName').value = '';
   document.getElementById('newCustEmail').value = '';
   document.getElementById('newCustCompany').value = '';
   document.getElementById('newCustPhone').value = '';
-  document.getElementById('customerModal').classList.add('active');
+  document.getElementById('newCustBusinessAddress').value = '';
+  document.getElementById('newCustIsTaxable').checked = true;
+  document.getElementById('newCustRole').value = 'customer';
+
+  if (customerId) {
+    if (title) title.innerText = 'Edit Customer';
+    if (idInput) idInput.value = customerId;
+    const c = adminCustomersData.find(item => item.id === customerId);
+    if (c) {
+      document.getElementById('newCustName').value = c.name || '';
+      document.getElementById('newCustEmail').value = c.email || '';
+      document.getElementById('newCustCompany').value = c.company || '';
+      document.getElementById('newCustPhone').value = c.phone || '';
+      document.getElementById('newCustBusinessAddress').value = c.businessAddress || '';
+      document.getElementById('newCustIsTaxable').checked = c.isTaxable !== false;
+      document.getElementById('newCustRole').value = c.role || 'customer';
+    }
+  } else {
+    if (title) title.innerText = 'Add New Customer';
+    if (idInput) idInput.value = '';
+  }
+
+  modal.classList.add('active');
 }
 
 function closeCustomerModal() {
@@ -1467,10 +1513,13 @@ function closeCustomerModal() {
 }
 
 async function saveCustomer() {
+  const customerId = document.getElementById('editCustomerId')?.value;
   const name = document.getElementById('newCustName').value;
   const email = document.getElementById('newCustEmail').value;
   const company = document.getElementById('newCustCompany').value;
   const phone = document.getElementById('newCustPhone').value;
+  const businessAddress = document.getElementById('newCustBusinessAddress').value;
+  const isTaxable = document.getElementById('newCustIsTaxable').checked;
   const role = document.getElementById('newCustRole').value;
 
   if (!name || !email) {
@@ -1479,24 +1528,225 @@ async function saveCustomer() {
   }
 
   try {
-    const res = await fetch(`${API_BASE}/api/admin/customers`, {
-      method: 'POST',
+    const method = customerId ? 'PUT' : 'POST';
+    const url = customerId ? `${API_BASE}/api/admin/customers/${customerId}` : `${API_BASE}/api/admin/customers`;
+
+    const res = await fetch(url, {
+      method,
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${authToken}`
       },
-      body: JSON.stringify({ name, email, company, phone, role })
+      body: JSON.stringify({ name, email, company, phone, businessAddress, isTaxable, role })
     });
 
     if (res.ok) {
-      alert(`${role === 'admin' ? 'Administrator' : 'Customer'} created successfully!`);
+      alert(`Customer record ${customerId ? 'updated' : 'created'} successfully!`);
       closeCustomerModal();
       loadAdminCustomersTable();
     } else {
       const data = await res.json();
-      alert('Error: ' + data.error);
+      alert('Error: ' + (data.error || 'Operation failed'));
     }
   } catch (e) {
-    alert('Error saving customer.');
+    alert('Error saving customer record.');
+  }
+}
+
+// --- CUSTOMER JOBSITE MANAGEMENT FUNCTIONS ---
+
+function openJobsitesManageModal(customerId) {
+  const modal = document.getElementById('jobsitesManageModal');
+  document.getElementById('targetJobsitesCustomerId').value = customerId;
+
+  const c = adminCustomersData.find(item => item.id === customerId);
+  if (c && document.getElementById('jobsitesManageTitle')) {
+    document.getElementById('jobsitesManageTitle').innerText = `${c.name}'s Jobsites (${c.company || 'Direct Client'})`;
+  }
+
+  renderJobsitesList(customerId);
+  modal.classList.add('active');
+}
+
+function closeJobsitesManageModal() {
+  document.getElementById('jobsitesManageModal').classList.remove('active');
+}
+
+function renderJobsitesList(customerId) {
+  const container = document.getElementById('jobsitesListContainer');
+  if (!container) return;
+
+  const c = adminCustomersData.find(item => item.id === customerId);
+  if (!c || !c.jobsites || c.jobsites.length === 0) {
+    container.innerHTML = `<p style="text-align: center; color: var(--text-muted); padding: 1.5rem 0;">No jobsites added for this customer yet. Click "Add Jobsite" to create one.</p>`;
+    return;
+  }
+
+  container.innerHTML = c.jobsites.map(j => {
+    const activeRentals = j.activeRentals || [];
+    const activeRentalsHtml = activeRentals.length > 0
+      ? activeRentals.map(r => `<li style="margin-bottom: 0.25rem;"><strong>Rental #${r.id}</strong>: ${r.items.map(i => `${i.quantity}x ${i.name}`).join(', ')} (${r.startDate} to ${r.endDate})</li>`).join('')
+      : '<li style="color: var(--text-muted);">No active rentals currently deployed at this site.</li>';
+
+    return `
+      <div style="background: var(--bg-dark); border: 1px solid var(--border); border-radius: 0.75rem; padding: 1.25rem; margin-bottom: 1rem;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+          <div>
+            <h4 style="color: #fff; margin: 0;">${j.name}</h4>
+            <div style="color: var(--primary); font-size: 0.9rem; font-weight: 600;">📍 ${j.address}</div>
+          </div>
+          <div style="display: flex; gap: 0.5rem;">
+            <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="openJobsiteEditModal('${j.id}')">Edit</button>
+            <button class="btn btn-danger" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; background: var(--warning); color: #fff;" onclick="deleteJobsite('${j.id}')">Delete</button>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+          <div>👤 Contact: <strong style="color: #fff;">${j.contactName || 'N/A'}</strong> (${j.contactPhone || 'N/A'})</div>
+          <div>🚚 Distance: <strong style="color: #fff;">${j.deliveryDistanceMiles || 0} Miles</strong> from yard</div>
+        </div>
+
+        ${j.specialInstructions ? `
+          <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid var(--accent); padding: 0.5rem 0.75rem; border-radius: 0.4rem; font-size: 0.85rem; color: #fff; margin-bottom: 0.75rem;">
+            <strong>📝 Delivery Instructions:</strong> ${j.specialInstructions}
+          </div>
+        ` : ''}
+
+        <div style="background: var(--bg-card); border: 1px dashed var(--border); padding: 0.75rem; border-radius: 0.5rem;">
+          <div style="font-weight: bold; font-size: 0.85rem; color: var(--accent); margin-bottom: 0.25rem;">📦 Deployed Active Rentals (${activeRentals.length}):</div>
+          <ul style="margin: 0; padding-left: 1.2rem; font-size: 0.85rem;">
+            ${activeRentalsHtml}
+          </ul>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function openJobsiteEditModal(jobsiteId = null) {
+  const modal = document.getElementById('jobsiteEditModal');
+  const title = document.getElementById('jobsiteEditTitle');
+  const idInput = document.getElementById('editJobsiteId');
+  const customerId = document.getElementById('targetJobsitesCustomerId').value;
+
+  document.getElementById('siteName').value = '';
+  document.getElementById('siteAddress').value = '';
+  document.getElementById('siteContactName').value = '';
+  document.getElementById('siteContactPhone').value = '';
+  document.getElementById('siteInstructions').value = '';
+  document.getElementById('siteDistance').value = '15';
+
+  if (jobsiteId) {
+    if (title) title.innerText = 'Edit Jobsite';
+    if (idInput) idInput.value = jobsiteId;
+
+    const c = adminCustomersData.find(item => item.id === customerId);
+    if (c && c.jobsites) {
+      const j = c.jobsites.find(site => site.id === jobsiteId);
+      if (j) {
+        document.getElementById('siteName').value = j.name || '';
+        document.getElementById('siteAddress').value = j.address || '';
+        document.getElementById('siteContactName').value = j.contactName || '';
+        document.getElementById('siteContactPhone').value = j.contactPhone || '';
+        document.getElementById('siteInstructions').value = j.specialInstructions || '';
+        document.getElementById('siteDistance').value = j.deliveryDistanceMiles || '15';
+      }
+    }
+  } else {
+    if (title) title.innerText = 'Add New Jobsite';
+    if (idInput) idInput.value = '';
+  }
+
+  modal.classList.add('active');
+}
+
+function closeJobsiteEditModal() {
+  document.getElementById('jobsiteEditModal').classList.remove('active');
+}
+
+async function saveJobsite() {
+  const customerId = document.getElementById('targetJobsitesCustomerId').value;
+  const jobsiteId = document.getElementById('editJobsiteId')?.value;
+
+  const name = document.getElementById('siteName').value;
+  const address = document.getElementById('siteAddress').value;
+  const contactName = document.getElementById('siteContactName').value;
+  const contactPhone = document.getElementById('siteContactPhone').value;
+  const specialInstructions = document.getElementById('siteInstructions').value;
+  const deliveryDistanceMiles = parseFloat(document.getElementById('siteDistance').value) || 0;
+
+  if (!name || !address) {
+    alert('Jobsite Name and Address are required.');
+    return;
+  }
+
+  try {
+    const method = jobsiteId ? 'PUT' : 'POST';
+    const url = jobsiteId ? `${API_BASE}/api/admin/customers/${customerId}/jobsites/${jobsiteId}` : `${API_BASE}/api/admin/customers/${customerId}/jobsites`;
+
+    const res = await fetch(url, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`
+      },
+      body: JSON.stringify({ name, address, contactName, contactPhone, specialInstructions, deliveryDistanceMiles })
+    });
+
+    if (res.ok) {
+      alert(`Jobsite ${jobsiteId ? 'updated' : 'added'} successfully!`);
+      closeJobsiteEditModal();
+      await loadAdminCustomersTable();
+      renderJobsitesList(customerId);
+    } else {
+      const data = await res.json();
+      alert('Error saving jobsite: ' + (data.error || 'Operation failed'));
+    }
+  } catch (e) {
+    alert('Error saving jobsite record.');
+  }
+}
+
+async function deleteJobsite(jobsiteId) {
+  const customerId = document.getElementById('targetJobsitesCustomerId').value;
+  if (!confirm('Are you sure you want to remove this jobsite?')) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/customers/${customerId}/jobsites/${jobsiteId}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${authToken}` }
+    });
+
+    if (res.ok) {
+      alert('Jobsite removed.');
+      await loadAdminCustomersTable();
+      renderJobsitesList(customerId);
+    } else {
+      const data = await res.json();
+      alert('Error: ' + (data.error || 'Failed'));
+    }
+  } catch (e) {
+    alert('Error removing jobsite.');
+  }
+}
+
+async function deleteCustomer(customerId) {
+  if (!confirm('Are you sure you want to PERMANENTLY delete this customer? This cannot be undone.')) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/customers/${customerId}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${authToken}` }
+    });
+
+    if (res.ok) {
+      alert('Customer deleted successfully.');
+      loadAdminCustomersTable();
+    } else {
+      const data = await res.json();
+      alert('Error deleting customer: ' + (data.error || 'Failed'));
+    }
+  } catch (e) {
+    alert('Error deleting customer.');
   }
 }

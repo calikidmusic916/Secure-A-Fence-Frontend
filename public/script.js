@@ -93,20 +93,31 @@ async function fetchProducts() {
   }
 }
 
-// Render Fence Rentals Grid
+// Helper to resolve product image URLs
+function resolveProductImgUrl(img) {
+  if (!img) return 'assets/panel.svg';
+  if (img.startsWith('http://') || img.startsWith('https://')) return img;
+  if (img.startsWith('/assets/')) return img.substring(1);
+  if (img.startsWith('assets/')) return img;
+  return API_BASE + (img.startsWith('/') ? img : '/' + img);
+}
+
+// Render Fence Rentals Grid (only products enabled for rental catalog)
 function renderProductGrid(products) {
   const container = document.getElementById('productGridContainer');
   if (!container) return;
 
-  if (products.length === 0) {
-    container.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">No products found.</p>`;
+  const rentalProducts = products.filter(p => p.isRental !== false);
+
+  if (rentalProducts.length === 0) {
+    container.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">No rental products found.</p>`;
     return;
   }
 
-  container.innerHTML = products.map(p => `
+  container.innerHTML = rentalProducts.map(p => `
     <div class="product-card">
       <div class="product-img-wrapper">
-        <img src="${p.image.startsWith('/') ? API_BASE + p.image : p.image}" alt="${p.name}" class="product-img">
+        <img src="${resolveProductImgUrl(p.image)}" alt="${p.name}" class="product-img">
       </div>
       <div class="product-body">
         <h3 class="product-name">${p.name}</h3>
@@ -145,7 +156,7 @@ function renderPurchaseGrid(products) {
   container.innerHTML = products.map(p => `
     <div class="product-card">
       <div class="product-img-wrapper">
-        <img src="${p.image.startsWith('/') ? API_BASE + p.image : p.image}" alt="${p.name}" class="product-img">
+        <img src="${resolveProductImgUrl(p.image)}" alt="${p.name}" class="product-img">
       </div>
       <div class="product-body">
         <h3 class="product-name">${p.name}</h3>
@@ -199,10 +210,12 @@ function filterCatalog(category) {
   }
   if (event && event.target) event.target.classList.add('active');
 
+  const rentalProducts = productsData.filter(p => p.isRental !== false);
+
   if (category === 'all') {
-    renderProductGrid(productsData);
+    renderProductGrid(rentalProducts);
   } else {
-    const filtered = productsData.filter(p => p.type === category);
+    const filtered = rentalProducts.filter(p => p.type === category);
     renderProductGrid(filtered);
   }
 }
@@ -395,7 +408,7 @@ function renderCartModal() {
     const unitPrice = orderType === 'rental' ? prod.rentalPriceMonthly : prod.salePrice;
     const itemTotal = unitPrice * item.quantity;
 
-    const imgUrl = prod.image.startsWith('/') ? API_BASE + prod.image : prod.image;
+    const imgUrl = resolveProductImgUrl(prod.image);
 
     return `
       <div class="cart-item">

@@ -16,8 +16,7 @@
       </a>
       <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰ Menu</button>
       <ul class="nav-links" id="navLinksList">
-        <li><button class="nav-btn active" onclick="switchView('store-view')">🏷️ Fence Rentals</button></li>
-        <li><button class="nav-btn" onclick="switchView('purchases-view')">🛒 Fence Purchases</button></li>
+        <li><button class="nav-btn active" onclick="switchView('store-view')">🏷️ Product Catalogs</button></li>
         <li><button class="nav-btn" onclick="switchView('calc-view')">📐 Rental Calculator</button></li>
         <li><button class="nav-btn" onclick="switchView('delivery-view')">🚚 Delivery Info</button></li>
         <li><button class="nav-btn" onclick="switchView('portal-view')" id="portalNavBtn">👤 Customer Portal</button></li>
@@ -42,41 +41,43 @@
   <!-- Main View Area -->
   <main class="main-container">
 
-    <!-- PAGE VIEW 1: FENCE RENTALS CATALOG -->
+    <!-- PAGE VIEW 1: HOME PAGE PRODUCT CATALOGS -->
     <section id="store-view" class="page-view active">
-      <div class="section-header">
-        <h2 class="section-title">Fence Rentals Catalog</h2>
-        <div class="filter-bar">
-          <button class="filter-chip active" onclick="filterCatalog('all')">All Products</button>
-          <button class="filter-chip" onclick="filterCatalog('panel')">Panels</button>
-          <button class="filter-chip" onclick="filterCatalog('stand')">Stands</button>
-          <button class="filter-chip" onclick="filterCatalog('clip')">Clips</button>
-          <button class="filter-chip" onclick="filterCatalog('gate')">Custom Gates &amp; Doors</button>
-          <button class="filter-chip" onclick="filterCatalog('accessory')">Accessories</button>
+      <!-- SECTION 1: FENCE RENTALS CATALOG -->
+      <div style="margin-bottom: 3.5rem;">
+        <div class="section-header">
+          <h2 class="section-title">🏷️ Fence Rentals Catalog</h2>
+          <div class="filter-bar">
+            <button class="filter-chip active" onclick="filterCatalog('all')">All Rentals</button>
+            <button class="filter-chip" onclick="filterCatalog('panel')">Panels</button>
+            <button class="filter-chip" onclick="filterCatalog('stand')">Stands</button>
+            <button class="filter-chip" onclick="filterCatalog('clip')">Clips</button>
+            <button class="filter-chip" onclick="filterCatalog('gate')">Custom Gates &amp; Doors</button>
+            <button class="filter-chip" onclick="filterCatalog('accessory')">Accessories</button>
+          </div>
+        </div>
+        <div class="product-grid" id="productGridContainer">
+          <!-- Loaded via JavaScript -->
         </div>
       </div>
-      <div class="product-grid" id="productGridContainer">
-        <!-- Loaded via JavaScript -->
-      </div>
-    </section>
 
-    <!-- PAGE VIEW 1B: FENCE PANEL PURCHASES CATALOG -->
-    <section id="purchases-view" class="page-view">
-      <div class="section-header">
-        <h2 class="section-title">Fence Panel Purchases Catalog</h2>
-        <div class="filter-bar">
-          <button class="filter-chip active" onclick="filterPurchaseCatalog('all')">All Products</button>
-          <button class="filter-chip" onclick="filterPurchaseCatalog('panel')">Panels</button>
-          <button class="filter-chip" onclick="filterPurchaseCatalog('stand')">Stands</button>
-          <button class="filter-chip" onclick="filterPurchaseCatalog('clip')">Clips</button>
-          <button class="filter-chip" onclick="filterPurchaseCatalog('gate')">Custom Gates &amp; Doors</button>
-          <button class="filter-chip" onclick="filterPurchaseCatalog('accessory')">Accessories</button>
+      <!-- SECTION 2: FENCE PANEL PURCHASES CATALOG -->
+      <div style="margin-bottom: 3.5rem; border-top: 1px solid var(--border); padding-top: 2.5rem;">
+        <div class="section-header">
+          <h2 class="section-title">🛒 Fence Panel Purchases Catalog</h2>
+          <div class="filter-bar">
+            <button class="filter-chip active" onclick="filterPurchaseCatalog('all')">All Purchases</button>
+            <button class="filter-chip" onclick="filterPurchaseCatalog('panel')">Panels</button>
+            <button class="filter-chip" onclick="filterPurchaseCatalog('stand')">Stands</button>
+            <button class="filter-chip" onclick="filterPurchaseCatalog('clip')">Clips</button>
+            <button class="filter-chip" onclick="filterPurchaseCatalog('gate')">Custom Gates &amp; Doors</button>
+            <button class="filter-chip" onclick="filterPurchaseCatalog('accessory')">Accessories</button>
+          </div>
+        </div>
+        <div class="product-grid" id="purchaseGridContainer">
+          <!-- Loaded via JavaScript -->
         </div>
       </div>
-      <div class="product-grid" id="purchaseGridContainer">
-        <!-- Loaded via JavaScript -->
-      </div>
-    </section>
 
       <!-- CUSTOMER PROJECTS SECTION -->
       <h2 class="section-title" style="margin-top: 3.5rem; border-top: 1px solid var(--border); padding-top: 2rem;">🛠️ Creative Temporary Fence Projects &amp; Uses</h2>

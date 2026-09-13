@@ -1967,6 +1967,7 @@ async function deleteProduct(productId) {
 // --- ADMIN INVOICE MANAGEMENT ---
 
 let adminInvoicesData = [];
+let currentInvoiceStatusFilter = 'all';
 
 async function loadAdminInvoicesTable() {
   try {
@@ -1976,33 +1977,92 @@ async function loadAdminInvoicesTable() {
 
     if (res.ok) {
       adminInvoicesData = await res.json();
-      const tbody = document.getElementById('adminInvoicesTableBody');
-      if (!tbody) return;
 
-      tbody.innerHTML = adminInvoicesData.map(inv => `
-        <tr>
-          <td><strong>${inv.id}</strong></td>
-          <td>${inv.orderId || 'N/A'}</td>
-          <td>${inv.customerName}</td>
-          <td><strong>$${(inv.amount || 0).toFixed(2)}</strong></td>
-          <td>${inv.createdAt || 'N/A'}</td>
-          <td>
-            <span class="status-badge ${inv.status === 'Paid' ? 'status-active' : 'status-pending'}">${inv.status || 'Unpaid'}</span>
-            ${inv.paymentMethod ? `<small style="display:block; color:var(--text-muted);">${inv.paymentMethod}</small>` : ''}
-          </td>
-          <td>
-            <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
-              <button class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;" onclick="viewInvoiceDetailModal('${inv.id}')">👁️ View / Print</button>
-              <button class="btn btn-accent" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;" onclick="updateInvoicePaymentPrompt('${inv.id}')">💵 Mark Paid</button>
-              <button class="btn btn-danger" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; background: var(--warning); color: #fff;" onclick="deleteInvoice('${inv.id}')">Delete</button>
-            </div>
-          </td>
-        </tr>
-      `).join('');
+      // Calculate gross financial metrics
+      const totalInvoiced = adminInvoicesData.reduce((sum, inv) => sum + (inv.amount || 0), 0);
+      const totalPaid = adminInvoicesData.filter(inv => (inv.status || '').toLowerCase() === 'paid').reduce((sum, inv) => sum + (inv.amount || 0), 0);
+      const totalUnpaid = adminInvoicesData.filter(inv => (inv.status || '').toLowerCase() !== 'paid').reduce((sum, inv) => sum + (inv.amount || 0), 0);
+
+      if (document.getElementById('invoiceMetricTotalInvoiced')) {
+        document.getElementById('invoiceMetricTotalInvoiced').innerText = `$${totalInvoiced.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+      }
+      if (document.getElementById('invoiceMetricTotalPaid')) {
+        document.getElementById('invoiceMetricTotalPaid').innerText = `$${totalPaid.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+      }
+      if (document.getElementById('invoiceMetricTotalUnpaid')) {
+        document.getElementById('invoiceMetricTotalUnpaid').innerText = `$${totalUnpaid.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+      }
+
+      renderFilteredInvoices();
     }
   } catch (e) {
     console.error('Error loading invoices', e);
   }
+}
+
+function filterInvoicesTable(status, event = null) {
+  currentInvoiceStatusFilter = status;
+  if (event && event.target) {
+    const parent = event.target.parentElement;
+    if (parent) {
+      parent.querySelectorAll('.filter-chip').forEach(chip => chip.classList.remove('active'));
+      event.target.classList.add('active');
+    }
+  }
+  renderFilteredInvoices();
+}
+
+function searchInvoicesTable() {
+  renderFilteredInvoices();
+}
+
+function renderFilteredInvoices() {
+  const tbody = document.getElementById('adminInvoicesTableBody');
+  if (!tbody) return;
+
+  const searchQuery = (document.getElementById('invoiceSearchInput')?.value || '').toLowerCase().trim();
+
+  const filtered = adminInvoicesData.filter(inv => {
+    // Status filter
+    const statusMatch = currentInvoiceStatusFilter === 'all' ||
+      (currentInvoiceStatusFilter === 'paid' && (inv.status || '').toLowerCase() === 'paid') ||
+      (currentInvoiceStatusFilter === 'unpaid' && (inv.status || '').toLowerCase() !== 'paid') ||
+      (currentInvoiceStatusFilter === 'overdue' && (inv.status || '').toLowerCase() === 'overdue');
+
+    // Search query filter
+    const queryMatch = !searchQuery ||
+      (inv.id || '').toLowerCase().includes(searchQuery) ||
+      (inv.customerName || '').toLowerCase().includes(searchQuery) ||
+      (inv.orderId || '').toLowerCase().includes(searchQuery);
+
+    return statusMatch && queryMatch;
+  });
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No invoices match the selected filter.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(inv => `
+    <tr>
+      <td><strong>${inv.id}</strong></td>
+      <td>${inv.orderId || 'N/A'}</td>
+      <td>${inv.customerName}</td>
+      <td><strong>$${(inv.amount || 0).toFixed(2)}</strong></td>
+      <td>${inv.createdAt || 'N/A'}</td>
+      <td>
+        <span class="status-badge ${inv.status === 'Paid' ? 'status-active' : 'status-pending'}">${inv.status || 'Unpaid'}</span>
+        ${inv.paymentMethod ? `<small style="display:block; color:var(--text-muted);">${inv.paymentMethod}</small>` : ''}
+      </td>
+      <td>
+        <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+          <button class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;" onclick="viewInvoiceDetailModal('${inv.id}')">👁️ View / Print</button>
+          <button class="btn btn-accent" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;" onclick="updateInvoicePaymentPrompt('${inv.id}')">💵 Mark Paid</button>
+          <button class="btn btn-danger" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; background: var(--warning); color: #fff;" onclick="deleteInvoice('${inv.id}')">Delete</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
 }
 
 function viewInvoiceDetailModal(invoiceId) {

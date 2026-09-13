@@ -674,9 +674,40 @@
       <!-- ADMIN SUB-TAB 5: INVOICES -->
       <div id="adminSubTabInvoices" style="display: none;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-          <h3>Invoices Management</h3>
+          <h3>Invoices &amp; Accounts Receivable Management</h3>
           <button class="btn btn-accent" onclick="openInvoiceModal()">➕ Create New Invoice</button>
         </div>
+
+        <!-- INVOICE FINANCIAL METRICS -->
+        <div class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 1.5rem;">
+          <div class="metric-card">
+            <div class="metric-label">Total Invoiced Billing</div>
+            <div class="metric-value" id="invoiceMetricTotalInvoiced" style="color: #fff;">$0.00</div>
+            <div class="metric-subtext">Lifetime gross invoicing</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Collected Payments</div>
+            <div class="metric-value" id="invoiceMetricTotalPaid" style="color: var(--success);">$0.00</div>
+            <div class="metric-subtext">Paid invoices total</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Outstanding Balance Due</div>
+            <div class="metric-value" id="invoiceMetricTotalUnpaid" style="color: var(--warning);">$0.00</div>
+            <div class="metric-subtext">Unpaid / pending receivables</div>
+          </div>
+        </div>
+
+        <!-- SEARCH & FILTER BAR -->
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem;">
+          <div class="filter-bar" style="margin: 0;">
+            <button class="filter-chip active" onclick="filterInvoicesTable('all', event)">All Invoices</button>
+            <button class="filter-chip" onclick="filterInvoicesTable('unpaid', event)">Unpaid / Due</button>
+            <button class="filter-chip" onclick="filterInvoicesTable('paid', event)">Paid</button>
+            <button class="filter-chip" onclick="filterInvoicesTable('overdue', event)">Overdue</button>
+          </div>
+          <input type="text" id="invoiceSearchInput" class="form-input" style="max-width: 280px;" placeholder="🔍 Search Invoice ID, Customer, Order..." oninput="searchInvoicesTable()">
+        </div>
+
         <div class="table-responsive">
           <table class="data-table">
             <thead>
@@ -685,8 +716,8 @@
                 <th>Order Ref</th>
                 <th>Customer</th>
                 <th>Amount</th>
-                <th>Date</th>
-                <th>Status</th>
+                <th>Billing Date</th>
+                <th>Payment Status</th>
                 <th>Actions</th>
               </tr>
             </thead>

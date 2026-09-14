@@ -171,8 +171,8 @@ body {
   border-bottom: 1px solid var(--border);
   position: relative;
   display: flex;
-  align-items: flex-end;
-  padding: 2rem 1.5rem;
+  align-items: flex-start;
+  padding: 1.25rem 1.5rem;
 }
 
 .hero-content {

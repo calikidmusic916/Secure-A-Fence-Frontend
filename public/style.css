@@ -163,12 +163,16 @@ body {
 
 /* Hero Section */
 .hero {
-  background: url('/assets/websitebanner.jpg');
-  background-size: cover;
-  background-position: center;
-  padding: 3.5rem 1.5rem;
+  background: url('/assets/websitebanner.jpg') no-repeat center center;
+  background-size: 100% 100%;
+  width: 100%;
+  aspect-ratio: 4128 / 1024;
+  min-height: 340px;
   border-bottom: 1px solid var(--border);
-  text-align: center;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  padding: 2rem 1.5rem;
 }
 
 .hero-content {

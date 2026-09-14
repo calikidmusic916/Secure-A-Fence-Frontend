@@ -163,7 +163,7 @@ body {
 
 /* Hero Section */
 .hero {
-  background: url('/assets/banner.jpg');
+  background: url('/assets/websitebanner.jpg');
   background-size: cover;
   background-position: center;
   padding: 3.5rem 1.5rem;

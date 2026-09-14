@@ -109,9 +109,14 @@
   <!-- Navigation Bar -->
   <header class="header">
     <div class="nav-container">
-      <a href="#" class="logo-link" onclick="switchView('store-view')">
-        <img src="assets/logo.jpg" alt="Secure-A-Fence" class="logo-img">
-      </a>
+      <div style="display: flex; align-items: center; gap: 1.25rem;">
+        <a href="#" class="logo-link" onclick="switchView('store-view')">
+          <img src="assets/logo.jpg" alt="Secure-A-Fence" class="logo-img">
+        </a>
+        <a href="tel:916-573-9543" class="header-phone-link" style="display: flex; align-items: center; gap: 0.4rem; color: #2563eb; font-weight: 700; font-size: 0.95rem; text-decoration: none; padding: 0.4rem 0.85rem; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 2rem; transition: all 0.2s ease;">
+          <span>📞</span> 916-573-9543
+        </a>
+      </div>
       <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰ Menu</button>
       <ul class="nav-links" id="navLinksList">
         <li><button class="nav-btn active" onclick="switchView('store-view')">🏷️ Product Catalogs</button></li>
@@ -130,11 +135,7 @@
 
   <!-- Hero Banner -->
   <section class="hero" style="position: relative; min-height: 240px; display: flex; align-items: flex-end; padding: 7rem 1.5rem 2.5rem;">
-    <div class="banner-info-pills" style="display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 1400px; margin: 0 auto; padding: 0; flex-wrap: wrap; gap: 1rem;">
-      <div class="info-pill" style="background: rgba(15, 23, 42, 0.85); border: 1px solid var(--border); padding: 0.6rem 1.25rem; border-radius: 2rem; display: flex; align-items: center; gap: 0.5rem; font-size: 0.95rem; color: #fff;">
-        <span style="color: var(--accent); font-weight: bold;">📞 Call Us:</span>
-        <a href="tel:916-573-9543" style="color: #fff; text-decoration: none; font-weight: 700;">916-573-9543</a>
-      </div>
+    <div class="banner-info-pills" style="display: flex; justify-content: flex-end; align-items: center; width: 100%; max-width: 1400px; margin: 0 auto; padding: 0; flex-wrap: wrap; gap: 1rem;">
       <div class="info-pill" style="background: rgba(15, 23, 42, 0.85); border: 1px solid var(--border); padding: 0.6rem 1.25rem; border-radius: 2rem; display: flex; align-items: center; gap: 0.5rem; font-size: 0.95rem; color: #fff;">
         <span style="color: var(--accent); font-weight: bold;">🕒 Hours:</span>
         <span>MON–FRI 8am–6pm &nbsp;|&nbsp; SUN 12am–3pm</span>

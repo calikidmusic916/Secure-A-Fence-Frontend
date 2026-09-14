@@ -908,16 +908,9 @@ html, body {
     padding: 0.75rem 0.5rem;
     align-items: center;
   }
-  .banner-info-pills {
-    justify-content: center !important;
-    width: 100% !important;
+  .banner-info-pills, .info-pill {
+    display: none !important;
   }
-  .info-pill {
-    font-size: 0.8rem !important;
-    padding: 0.45rem 0.85rem !important;
-    text-align: center;
-    justify-content: center;
-    width: auto;
     max-width: 100%;
   }
 

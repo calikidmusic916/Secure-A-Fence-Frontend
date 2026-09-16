@@ -941,12 +941,18 @@ html, body {
   }
 
   .product-grid {
-    grid-template-columns: 1fr;
-    gap: 1.15rem;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.25rem;
+  }
+
+  .product-card {
+    max-width: 480px;
+    margin: 0 auto;
+    width: 100%;
   }
 
   .product-img-wrapper {
-    height: 170px;
+    height: 180px;
   }
 
   .card-actions {

@@ -428,7 +428,11 @@ function runCalculator() {
 
 // Request Contract / Quote
 function submitRentalQuote() {
-  if (!quoteData) return;
+  runCalculator();
+  if (!quoteData || (quoteData.linearFeet === 0 && quoteData.potties === 0 && quoteData.handWash === 0)) {
+    alert('Please enter at least some temporary fencing, porta potties, or hand wash stations in the calculator before requesting a contract.');
+    return;
+  }
   isQuoteMode = true;
   openCartModal();
 }
@@ -474,12 +478,14 @@ function renderCartModal() {
 
     container.innerHTML = `
       <div class="cart-item" style="display: block;">
-        <div style="font-weight: bold; color: var(--accent); margin-bottom: 0.5rem;">Custom Jobsite Rental Quote</div>
+        <div style="font-weight: bold; color: var(--accent); margin-bottom: 0.5rem;">Turnkey Rental &amp; Sanitation Quote</div>
         <ul style="color: var(--text-muted); font-size: 0.9rem; padding-left: 1.5rem; margin-bottom: 1rem;">
-          <li>${quoteData.linearFeet} Linear Feet of Fence</li>
-          <li>${quoteData.months} Month Estimated Duration</li>
+          <li>${quoteData.linearFeet} Linear Feet of Temporary Fence</li>
+          <li>${quoteData.duration} ${quoteData.termType === 'monthly' ? 'Month(s)' : 'Week(s)'} Duration</li>
+          <li>${quoteData.potties} Porta Potty Unit(s)</li>
+          <li>${quoteData.handWash} Hand Washing Station(s)</li>
           <li>${quoteData.gates} Pedestrian Gate(s)</li>
-          <li>Privacy Screen: ${quoteData.privacy ? 'Yes' : 'No'}</li>
+          <li>Privacy Windscreen: ${quoteData.privacy ? 'Yes' : 'No'}</li>
         </ul>
       </div>
     `;
@@ -488,7 +494,7 @@ function renderCartModal() {
       const panelsCount = Math.ceil(quoteData.linearFeet / 12);
       const standsCount = panelsCount > 0 ? panelsCount + 1 : 0;
       const clipsCount = panelsCount;
-      document.getElementById('cartEquipmentBreakdown').innerText = `${panelsCount} Panels | ${standsCount} Stands | ${clipsCount} Clips`;
+      document.getElementById('cartEquipmentBreakdown').innerText = `${panelsCount} Panels | ${standsCount} Stands | ${quoteData.potties} Potties | ${quoteData.handWash} Sinks`;
     }
 
     if (document.getElementById('cartRentalBreakdown')) document.getElementById('cartRentalBreakdown').style.display = 'block';
@@ -496,11 +502,11 @@ function renderCartModal() {
     if (document.getElementById('rentalMonthsGroup')) document.getElementById('rentalMonthsGroup').style.display = 'none';
 
     if (document.getElementById('cartSetupVal')) document.getElementById('cartSetupVal').innerText = `$${quoteData.setupTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    if (document.getElementById('cartMonthlyVal')) document.getElementById('cartMonthlyVal').innerText = `$${quoteData.totalMonthly.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / mo`;
+    if (document.getElementById('cartMonthlyVal')) document.getElementById('cartMonthlyVal').innerText = `$${quoteData.totalRecurring.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / ${quoteData.termType === 'monthly' ? 'mo' : 'wk'}`;
     document.getElementById('cartTotalVal').innerText = `$${quoteData.finalTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
     const minWarn = document.getElementById('cartMinWarning');
-    if (minWarn) minWarn.style.display = (quoteData.finalTotal === 300 && ((quoteData.totalMonthly * quoteData.months) + quoteData.setupTotal < 300)) ? 'block' : 'none';
+    if (minWarn) minWarn.style.display = (quoteData.finalTotal === 300 && ((quoteData.totalRecurring * quoteData.duration) + quoteData.setupTotal < 300)) ? 'block' : 'none';
     return;
   }
 

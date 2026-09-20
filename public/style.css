@@ -505,6 +505,27 @@ body {
   }
 }
 
+@media (max-width: 768px) {
+  .calc-card {
+    padding: 1rem;
+  }
+  .calc-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+  .calc-results {
+    position: static !important;
+    padding: 1rem;
+  }
+  .main-container {
+    padding: 0 0.75rem;
+    margin: 1rem auto;
+  }
+  .section-title {
+    font-size: 1.35rem;
+  }
+}
+
 .form-group {
   margin-bottom: 1.25rem;
 }

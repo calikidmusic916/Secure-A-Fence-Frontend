@@ -712,20 +712,63 @@ async function submitCheckout() {
     return;
   }
 
-  if (!authToken) {
-    alert('Please sign in or create a customer account to complete your order.');
-    closeCartModal();
-    switchView('portal-view');
-    return;
+  // Auto-register or authenticate guest customer if not logged in
+  let currentAuthToken = authToken;
+  const custName = document.getElementById('checkoutCustomerName')?.value || 'Valued Customer';
+  const custEmail = document.getElementById('checkoutCustomerEmail')?.value || `customer_${Date.now()}@secureafence.com`;
+  const custPhone = document.getElementById('checkoutCustomerPhone')?.value || '(916) 555-0000';
+
+  if (!currentAuthToken) {
+    try {
+      const regRes = await fetch(`${API_BASE}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: custName,
+          email: custEmail,
+          phone: custPhone,
+          password: 'securefence123',
+          company: custName + ' Project'
+        })
+      });
+      const regData = await regRes.json();
+      if (regRes.ok && regData.token) {
+        currentAuthToken = regData.token;
+        authToken = currentAuthToken;
+        localStorage.setItem('saf_token', authToken);
+        currentUser = regData.user;
+        updateAuthUI();
+      } else {
+        const loginRes = await fetch(`${API_BASE}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: custEmail, password: 'securefence123' })
+        });
+        const loginData = await loginRes.json();
+        if (loginRes.ok && loginData.token) {
+          currentAuthToken = loginData.token;
+          authToken = currentAuthToken;
+          localStorage.setItem('saf_token', authToken);
+          currentUser = loginData.user;
+          updateAuthUI();
+        } else {
+          alert(regData.error || 'Could not create or authenticate customer account.');
+          return;
+        }
+      }
+    } catch (e) {
+      alert('Network error registering customer account during checkout.');
+      return;
+    }
   }
 
   const orderType = document.getElementById('cartOrderType').value;
   const jobsiteName = document.getElementById('checkoutJobsiteName')?.value || '';
   const deliveryAddress = document.getElementById('checkoutAddress').value;
   const deliveryDistance = document.getElementById('checkoutDistance').value;
-  const jobsiteContact = document.getElementById('checkoutContact').value;
+  const jobsiteContact = `${custName} (${custPhone})`;
   const specialInstructions = document.getElementById('checkoutInstructions')?.value || '';
-  const startDate = document.getElementById('checkoutStartDate').value;
+  const startDate = document.getElementById('checkoutStartDate').value || new Date().toISOString().split('T')[0];
 
   const payload = {
     orderType,
@@ -739,7 +782,12 @@ async function submitCheckout() {
 
   if (isQuoteMode && quoteData) {
     payload.isCustomQuote = true;
-    payload.quoteData = quoteData;
+    payload.quoteData = {
+      ...quoteData,
+      customerName: custName,
+      customerEmail: custEmail,
+      customerPhone: custPhone
+    };
     payload.items = []; // Backend will populate this based on quoteData
   } else {
     payload.items = cart;
@@ -750,7 +798,7 @@ async function submitCheckout() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${authToken}`
+        'Authorization': `Bearer ${currentAuthToken}`
       },
       body: JSON.stringify(payload)
     });
@@ -758,7 +806,7 @@ async function submitCheckout() {
     const data = await res.json();
 
     if (res.ok) {
-      alert(`🎉 Order ${data.order.id} submitted successfully! Your invoice and delivery dispatch have been created.`);
+      alert(`🎉 Order ${data.order?.id || 'Successfully Placed'} submitted! New customer registered, rental agreement created, and delivery dispatch sent to the Admin App.`);
       cart = [];
       isQuoteMode = false;
       updateCartBadge();

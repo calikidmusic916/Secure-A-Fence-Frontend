@@ -333,6 +333,23 @@ function runCalculator() {
 
   const isMonthly = termType === 'monthly';
 
+  if (L === 0 && potties === 0 && handWash === 0) {
+    document.getElementById('termUnitLabel').innerText = isMonthly ? 'Months' : 'Weeks';
+    document.getElementById('termRateLabel').innerText = isMonthly ? 'Monthly' : 'Weekly';
+    document.getElementById('termDurationUnitLabel').innerText = isMonthly ? 'Months' : 'Weeks';
+    document.getElementById('resSetupTotal').innerText = '$0.00';
+    document.getElementById('resRecurringTotal').innerText = `$0.00 / ${isMonthly ? 'mo' : 'wk'}`;
+    document.getElementById('resGrandTotal').innerText = '$0.00';
+    document.getElementById('resPanelsCount').innerText = 'Temporary Fence (0 LF)';
+    document.getElementById('resFenceRate').innerText = '$0.00';
+    document.getElementById('resPortaCount').innerText = '0 Porta Potties';
+    document.getElementById('resPortaRate').innerText = '$0.00';
+    document.getElementById('resHandCount').innerText = '0 Hand Wash Stations';
+    document.getElementById('resHandRate').innerText = '$0.00';
+    document.getElementById('resDurationSpan').innerText = duration;
+    return;
+  }
+
   // Competitive Rates based on term
   const fenceRate = isMonthly ? 1.35 : 0.50;
   const privacyRate = isMonthly ? 0.33 : 0.15;

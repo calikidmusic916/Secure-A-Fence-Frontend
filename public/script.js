@@ -769,12 +769,66 @@ async function submitCheckout() {
   }
 
   const orderType = document.getElementById('cartOrderType').value;
-  const jobsiteName = document.getElementById('checkoutJobsiteName')?.value || '';
-  const deliveryAddress = document.getElementById('checkoutAddress').value;
-  const deliveryDistance = document.getElementById('checkoutDistance').value;
+  const jobsiteName = document.getElementById('checkoutJobsiteName')?.value || 'Sacramento Jobsite';
+  const deliveryAddress = document.getElementById('checkoutAddress').value || 'Sacramento, CA';
+  const deliveryDistance = parseFloat(document.getElementById('checkoutDistance').value) || 15;
   const jobsiteContact = `${custName} (${custPhone})`;
   const specialInstructions = document.getElementById('checkoutInstructions')?.value || '';
   const startDate = document.getElementById('checkoutStartDate').value || new Date().toISOString().split('T')[0];
+
+  let orderItems = [];
+  let subtotalVal = 0;
+  let deliveryFeeVal = 0;
+  let totalVal = 0;
+
+  if (isQuoteMode && quoteData) {
+    const panelsCount = Math.ceil(quoteData.linearFeet / 12);
+    if (quoteData.linearFeet > 0) {
+      orderItems.push({
+        productId: 'custom-fence-panel',
+        name: `${quoteData.linearFeet} LF Temporary Chain-Link Fence`,
+        unitPrice: 1.35,
+        quantity: panelsCount,
+        total: quoteData.linearFeet * 1.35 * quoteData.duration
+      });
+    }
+    if (quoteData.potties > 0) {
+      orderItems.push({
+        productId: 'custom-porta-potty',
+        name: `${quoteData.potties}x Porta Potty Rentals`,
+        unitPrice: 150.00,
+        quantity: quoteData.potties,
+        total: quoteData.potties * 150.00 * quoteData.duration
+      });
+    }
+    if (quoteData.handWash > 0) {
+      orderItems.push({
+        productId: 'custom-hand-wash',
+        name: `${quoteData.handWash}x Hand Washing Stations`,
+        unitPrice: 110.00,
+        quantity: quoteData.handWash,
+        total: quoteData.handWash * 110.00 * quoteData.duration
+      });
+    }
+    subtotalVal = quoteData.totalRecurring * quoteData.duration;
+    deliveryFeeVal = quoteData.setupTotal;
+    totalVal = quoteData.finalTotal;
+  } else {
+    orderItems = cart.map(item => {
+      const prod = productsData.find(p => p.id === item.productId);
+      const unitPrice = orderType === 'rental' ? (prod?.rentalPriceMonthly || 1.35) : (prod?.salePrice || 50);
+      return {
+        productId: item.productId,
+        name: prod?.name || 'Item',
+        unitPrice,
+        quantity: item.quantity,
+        total: unitPrice * item.quantity
+      };
+    });
+    subtotalVal = orderItems.reduce((sum, i) => sum + i.total, 0);
+    deliveryFeeVal = deliveryDistance <= 20 ? 0 : (deliveryDistance - 20) * 2 * 1.00;
+    totalVal = subtotalVal + deliveryFeeVal;
+  }
 
   const payload = {
     orderType,
@@ -783,21 +837,23 @@ async function submitCheckout() {
     deliveryDistance,
     jobsiteContact,
     specialInstructions,
-    startDate
-  };
-
-  if (isQuoteMode && quoteData) {
-    payload.isCustomQuote = true;
-    payload.quoteData = {
+    startDate,
+    customerName: custName,
+    customerEmail: custEmail,
+    customerPhone: custPhone,
+    subtotal: subtotalVal,
+    deliveryFee: deliveryFeeVal,
+    tax: 0,
+    totalAmount: totalVal,
+    items: orderItems,
+    isCustomQuote: isQuoteMode || false,
+    quoteData: isQuoteMode && quoteData ? {
       ...quoteData,
       customerName: custName,
       customerEmail: custEmail,
       customerPhone: custPhone
-    };
-    payload.items = []; // Backend will populate this based on quoteData
-  } else {
-    payload.items = cart;
-  }
+    } : null
+  };
 
   try {
     const res = await fetch(`${API_BASE}/api/orders`, {
@@ -820,7 +876,7 @@ async function submitCheckout() {
       fetchProducts(); // Refresh stock
       switchView('portal-view');
     } else {
-      alert(data.error || 'Failed to place order.');
+      alert(data.error || data.message || 'Failed to place order.');
     }
   } catch (err) {
     alert('Network or server error submitting checkout.');

@@ -349,82 +349,102 @@
         <h2 class="section-title">Turnkey Rental &amp; Sanitation Calculator</h2>
       </div>
       <div class="calc-card">
-        <div class="calc-grid">
-          <div>
-            <h3>Project &amp; Equipment Configuration</h3>
-            <p style="color: var(--text-muted); margin-bottom: 1.25rem; font-size: 0.9rem;">
-              Calculate competitive pricing for temporary fencing, porta potties, and hand washing stations with monthly, weekly, or turnkey package rates.
+        <div class="calc-grid" style="grid-template-columns: 1.3fr 1fr; gap: 2rem;">
+
+          <!-- LEFT COLUMN: Q&A CARDS WIZARD -->
+          <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+            <p style="color: var(--text-muted); font-size: 0.92rem; margin-bottom: 0.5rem;">
+              Answer a few quick questions below to instantly calculate your competitive pricing for Sacramento temporary fencing, porta potties, and hand washing stations.
             </p>
 
-            <div class="form-group">
-              <label class="form-label">Select Pricing Preset / Package</label>
+            <!-- Q&A CARD 1: PACKAGE PRESET -->
+            <div style="background: var(--bg-dark); border: 1px solid var(--border); border-radius: 0.85rem; padding: 1.25rem;">
+              <span style="font-size: 0.75rem; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.3rem;">Question 1 of 4</span>
+              <h3 style="color: #fff; font-size: 1.05rem; margin-bottom: 0.75rem;">What type of project or bundle do you need?</h3>
               <select id="calcPackagePreset" class="form-select" onchange="applyPackagePreset()">
-                <option value="custom">Custom Equipment Configuration</option>
-                <option value="construction">🏗️ Turnkey Construction Package (500 LF Fence + 2 Potties + 1 Sink - 10% Off)</option>
+                <option value="custom">🛠️ Custom Equipment Configuration</option>
+                <option value="construction">🏗️ Turnkey Construction Site Package (500 LF Fence + 2 Potties + 1 Sink - 10% Off)</option>
                 <option value="event">🎉 Outdoor Event / Festival Package (300 LF Barricades + 4 Potties + 2 Sinks - 15% Off)</option>
               </select>
             </div>
 
-            <div class="form-group">
-              <label class="form-label">Rental Term Duration</label>
-              <select id="calcTermType" class="form-select" onchange="runCalculator()">
-                <option value="monthly">Monthly Long-Term (Contractor / Jobsite)</option>
-                <option value="weekly">Weekly Short-Term (Event / Festival / Emergency)</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Temporary Fence Linear Feet (L)</label>
-              <input type="number" id="calcLinearFeet" class="form-input" value="500" placeholder="e.g. 500" oninput="runCalculator()">
-              <input type="hidden" id="calcPanelWidth" value="12">
-            </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-              <div class="form-group">
-                <label class="form-label">Porta Potties (Units)</label>
-                <input type="number" id="calcPortaPotties" class="form-input" value="2" min="0" oninput="runCalculator()">
-              </div>
-              <div class="form-group">
-                <label class="form-label">Hand Wash Stations (Units)</label>
-                <input type="number" id="calcHandWash" class="form-input" value="1" min="0" oninput="runCalculator()">
+            <!-- Q&A CARD 2: RENTAL TERM & DURATION -->
+            <div style="background: var(--bg-dark); border: 1px solid var(--border); border-radius: 0.85rem; padding: 1.25rem;">
+              <span style="font-size: 0.75rem; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.3rem;">Question 2 of 4</span>
+              <h3 style="color: #fff; font-size: 1.05rem; margin-bottom: 0.75rem;">How long do you need the rental equipment?</h3>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.75rem;">
+                <div>
+                  <label class="form-label" style="font-size: 0.85rem;">Rental Term Structure</label>
+                  <select id="calcTermType" class="form-select" onchange="runCalculator()">
+                    <option value="monthly">Monthly Long-Term (Jobsite)</option>
+                    <option value="weekly">Weekly Short-Term (Event)</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="form-label" style="font-size: 0.85rem;">Duration Count (<span id="termUnitLabel">Months</span>)</label>
+                  <input type="number" id="calcDurationCount" class="form-input" value="3" min="1" oninput="runCalculator()">
+                </div>
               </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-              <div class="form-group">
-                <label class="form-label">Duration Count (<span id="termUnitLabel">Months</span>)</label>
-                <input type="number" id="calcDurationCount" class="form-input" value="3" min="1" oninput="runCalculator()">
+            <!-- Q&A CARD 3: TEMPORARY FENCING -->
+            <div style="background: var(--bg-dark); border: 1px solid var(--border); border-radius: 0.85rem; padding: 1.25rem;">
+              <span style="font-size: 0.75rem; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.3rem;">Question 3 of 4</span>
+              <h3 style="color: #fff; font-size: 1.05rem; margin-bottom: 0.75rem;">How much temporary fencing is required?</h3>
+              <div class="form-group" style="margin-bottom: 0.75rem;">
+                <label class="form-label" style="font-size: 0.85rem;">Temporary Fence Linear Feet (L)</label>
+                <input type="number" id="calcLinearFeet" class="form-input" value="500" placeholder="e.g. 500" oninput="runCalculator()">
+                <input type="hidden" id="calcPanelWidth" value="12">
               </div>
-              <div class="form-group">
-                <label class="form-label">Pedestrian Gates (G)</label>
-                <input type="number" id="calcGates" class="form-input" value="1" min="0" oninput="runCalculator()">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label" style="font-size: 0.85rem;">Pedestrian Gates (G)</label>
+                  <input type="number" id="calcGates" class="form-input" value="1" min="0" oninput="runCalculator()">
+                </div>
+                <div style="display: flex; align-items: center; padding-top: 1.5rem;">
+                  <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: #fff; font-size: 0.9rem;">
+                    <input type="checkbox" id="calcPrivacy" checked onchange="runCalculator()"> Privacy Windscreen?
+                  </label>
+                </div>
               </div>
             </div>
 
-            <div class="form-group">
-              <label class="form-label">Delivery Zone (Sacramento Area)</label>
-              <select id="calcDeliveryZone" class="form-select" onchange="runCalculator()">
-                <option value="125">Local Sacramento Area (Zone 1) = $125</option>
-                <option value="200">Regional Suburbs (Zone 2) = $200</option>
-              </select>
+            <!-- Q&A CARD 4: SANITATION & DELIVERY -->
+            <div style="background: var(--bg-dark); border: 1px solid var(--border); border-radius: 0.85rem; padding: 1.25rem;">
+              <span style="font-size: 0.75rem; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.3rem;">Question 4 of 4</span>
+              <h3 style="color: #fff; font-size: 1.05rem; margin-bottom: 0.75rem;">Do you need porta potties or hand wash stations?</h3>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.75rem;">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label" style="font-size: 0.85rem;">Porta Potties (Units)</label>
+                  <input type="number" id="calcPortaPotties" class="form-input" value="2" min="0" oninput="runCalculator()">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label" style="font-size: 0.85rem;">Hand Wash Sinks (Units)</label>
+                  <input type="number" id="calcHandWash" class="form-input" value="1" min="0" oninput="runCalculator()">
+                </div>
+              </div>
+              <div class="form-group" style="margin-top: 0.75rem; margin-bottom: 0;">
+                <label class="form-label" style="font-size: 0.85rem;">Delivery Zone (Sacramento Area)</label>
+                <select id="calcDeliveryZone" class="form-select" onchange="runCalculator()">
+                  <option value="125">Local Sacramento Area (Zone 1) = $125</option>
+                  <option value="200">Regional Suburbs (Zone 2) = $200</option>
+                </select>
+              </div>
             </div>
 
-            <div class="form-group">
-              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: #fff;">
-                <input type="checkbox" id="calcPrivacy" checked onchange="runCalculator()"> Add Privacy Windscreen Mesh?
-              </label>
-            </div>
           </div>
 
+          <!-- RIGHT COLUMN: LIVE ESTIMATE SUMMARY CARD -->
           <div>
-            <h3>Your Turnkey Rental Estimate</h3>
-            <div class="calc-results" id="calcResultsBox">
-              <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid var(--primary); padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 1rem;">
-                <h4 style="color: var(--primary); margin-bottom: 0.25rem; font-size: 0.85rem;">EQUIPMENT &amp; SANITATION BREAKDOWN</h4>
-                <div style="display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.85rem; color: var(--text-main);">
-                  <div style="display: flex; justify-content: space-between;"><span id="resPanelsCount">0 Panels</span><span id="resFenceRate">$0.00</span></div>
-                  <div style="display: flex; justify-content: space-between;"><span id="resPortaCount">0 Porta Potties</span><span id="resPortaRate">$0.00</span></div>
-                  <div style="display: flex; justify-content: space-between;"><span id="resHandCount">0 Hand Wash Stations</span><span id="resHandRate">$0.00</span></div>
+            <div class="calc-results" id="calcResultsBox" style="position: sticky; top: 2rem;">
+              <h3 style="color: #fff; font-size: 1.2rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem;">📋 Your Live Estimate Summary</h3>
+
+              <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid var(--primary); padding: 0.85rem; border-radius: 0.6rem; margin-bottom: 1rem;">
+                <h4 style="color: var(--primary); margin-bottom: 0.4rem; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;">Equipment &amp; Sanitation Breakdown</h4>
+                <div style="display: flex; flex-direction: column; gap: 0.4rem; font-size: 0.88rem; color: var(--text-main);">
+                  <div style="display: flex; justify-content: space-between;"><span id="resPanelsCount">Temporary Fence (500 LF)</span><span id="resFenceRate" style="font-weight: 600; color: #fff;">$0.00</span></div>
+                  <div style="display: flex; justify-content: space-between;"><span id="resPortaCount">2 Porta Potties</span><span id="resPortaRate" style="font-weight: 600; color: #fff;">$0.00</span></div>
+                  <div style="display: flex; justify-content: space-between;"><span id="resHandCount">1 Hand Wash Stations</span><span id="resHandRate" style="font-weight: 600; color: #fff;">$0.00</span></div>
                 </div>
               </div>
 
@@ -432,15 +452,16 @@
               <div class="result-item"><span>Recurring <span id="termRateLabel">Monthly</span> Rate:</span><strong id="resRecurringTotal">$1,125.00 / mo</strong></div>
               <div class="result-item" id="packageDiscountRow" style="display: none; color: var(--success);"><span>Turnkey Package Discount:</span><strong id="resDiscountTotal">-$0.00</strong></div>
               
-              <div class="comparison-box" style="grid-template-columns: 1fr;">
+              <div class="comparison-box" style="grid-template-columns: 1fr; margin-top: 1rem;">
                 <div class="option-card highlight">
                   <div class="option-title">Total Estimated Cost (for <span id="resDurationSpan">3</span> <span id="termDurationUnitLabel">Months</span>)</div>
                   <div class="option-price" id="resGrandTotal">$3,670.00</div>
-                  <button class="btn btn-accent" style="width: 100%; margin-top: 0.75rem;" onclick="submitRentalQuote()">Request Contract &amp; Secure Delivery Date</button>
+                  <button class="btn btn-accent" style="width: 100%; margin-top: 1rem;" onclick="submitRentalQuote()">Request Contract &amp; Secure Delivery Date</button>
                 </div>
               </div>
             </div>
           </div>
+
         </div>
       </div>
 

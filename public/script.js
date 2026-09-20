@@ -21,6 +21,37 @@ document.addEventListener('DOMContentLoaded', () => {
   if (startDateInput) startDateInput.value = today;
   if (pickupDateInput) pickupDateInput.value = today;
 
+  // Handle initial page load based on pathname (dedicated landing pages)
+  const path = window.location.pathname;
+  if (path.includes('/calculator') || path.includes('/quote')) {
+    switchView('calc-view', false);
+  } else if (path.includes('/rentals') || path.includes('/sanitation')) {
+    switchView('sanitation-view', false);
+  } else if (path.includes('/delivery') || path.includes('/shipping')) {
+    switchView('delivery-view', false);
+  } else if (path.includes('/portal') || path.includes('/account')) {
+    switchView('portal-view', false);
+  } else if (path.includes('/admin') || path.includes('/operations')) {
+    switchView('admin-view', false);
+  } else {
+    switchView('store-view', false);
+  }
+
+  // Handle browser back/forward navigation
+  window.addEventListener('popstate', (e) => {
+    if (e.state && e.state.viewId) {
+      switchView(e.state.viewId, false);
+    } else {
+      const p = window.location.pathname;
+      if (p.includes('/calculator')) switchView('calc-view', false);
+      else if (p.includes('/rentals')) switchView('sanitation-view', false);
+      else if (p.includes('/delivery')) switchView('delivery-view', false);
+      else if (p.includes('/portal')) switchView('portal-view', false);
+      else if (p.includes('/admin')) switchView('admin-view', false);
+      else switchView('store-view', false);
+    }
+  });
+
   fetchProducts();
   checkAuthUser();
   runCalculator();
@@ -32,7 +63,7 @@ function toggleMobileMenu() {
   if (navLinks) navLinks.classList.toggle('open');
 }
 
-function switchView(viewId) {
+function switchView(viewId, updateHistory = true) {
   // Close mobile menu when switching views
   const navLinks = document.getElementById('navLinksList');
   if (navLinks) navLinks.classList.remove('open');
@@ -55,6 +86,18 @@ function switchView(viewId) {
     b.getAttribute('onclick') && b.getAttribute('onclick').includes(viewId)
   );
   if (navBtn) navBtn.classList.add('active');
+
+  // Update browser URL for dedicated landing pages
+  if (updateHistory) {
+    let route = '/';
+    if (viewId === 'calc-view') route = '/calculator';
+    else if (viewId === 'sanitation-view') route = '/rentals';
+    else if (viewId === 'delivery-view') route = '/delivery';
+    else if (viewId === 'portal-view') route = '/portal';
+    else if (viewId === 'admin-view') route = '/admin';
+
+    window.history.pushState({ viewId }, '', route);
+  }
 
   // Trigger view specific loads
   if (viewId === 'store-view' || viewId === 'purchases-view') {

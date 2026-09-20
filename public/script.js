@@ -295,75 +295,116 @@ function filterPurchaseCatalog(category) {
   }
 }
 
-// Interactive Fence Calculator
+// Apply Package Presets
+function applyPackagePreset() {
+  const preset = document.getElementById('calcPackagePreset').value;
+  if (preset === 'construction') {
+    document.getElementById('calcTermType').value = 'monthly';
+    document.getElementById('calcLinearFeet').value = '500';
+    document.getElementById('calcPortaPotties').value = '2';
+    document.getElementById('calcHandWash').value = '1';
+    document.getElementById('calcDurationCount').value = '3';
+    document.getElementById('calcGates').value = '1';
+    document.getElementById('calcPrivacy').checked = true;
+  } else if (preset === 'event') {
+    document.getElementById('calcTermType').value = 'weekly';
+    document.getElementById('calcLinearFeet').value = '300';
+    document.getElementById('calcPortaPotties').value = '4';
+    document.getElementById('calcHandWash').value = '2';
+    document.getElementById('calcDurationCount').value = '1';
+    document.getElementById('calcGates').value = '2';
+    document.getElementById('calcPrivacy').checked = false;
+  }
+  runCalculator();
+}
+
+// Interactive Turnkey Rental & Sanitation Calculator
 function runCalculator() {
+  const preset = document.getElementById('calcPackagePreset').value;
+  const termType = document.getElementById('calcTermType').value; // 'monthly' or 'weekly'
   const L = parseFloat(document.getElementById('calcLinearFeet').value) || 0;
-  const W = parseFloat(document.getElementById('calcPanelWidth').value) || 12;
-  const M = parseInt(document.getElementById('calcMonths').value) || 1;
+  const W = parseFloat(document.getElementById('calcPanelWidth')?.value || 12);
+  const duration = parseInt(document.getElementById('calcDurationCount').value) || 1;
+  const potties = parseInt(document.getElementById('calcPortaPotties').value) || 0;
+  const handWash = parseInt(document.getElementById('calcHandWash').value) || 0;
   const P = document.getElementById('calcPrivacy').checked ? 1 : 0;
   const G = parseInt(document.getElementById('calcGates').value) || 0;
   const D = parseFloat(document.getElementById('calcDeliveryZone').value) || 125;
 
-  if (L <= 0) {
-    document.getElementById('resSetupTotal').innerText = '$0.00';
-    document.getElementById('resMonthlyTotal').innerText = '$0.00 / month';
-    document.getElementById('resGrandTotal').innerText = '$0.00';
-    return;
-  }
+  const isMonthly = termType === 'monthly';
 
-  // Recurring Monthly Variables
-  const monthlyFence = L * 1.35;
-  const monthlyPrivacy = L * 0.33 * P;
-  const monthlyGate = G * 25.00;
-  const totalMonthly = monthlyFence + monthlyPrivacy + monthlyGate;
+  // Competitive Rates based on term
+  const fenceRate = isMonthly ? 1.35 : 0.50;
+  const privacyRate = isMonthly ? 0.33 : 0.15;
+  const gateRate = isMonthly ? 25.00 : 10.00;
+  const pottyRate = isMonthly ? 150.00 : 125.00;
+  const handWashRate = isMonthly ? 110.00 : 95.00;
 
-  // One-Time Variables
-  const installLabor = L * 0.17;
-  const removalLabor = L * 0.17;
-  const totalLabor = installLabor + removalLabor;
-  const setupTotal = totalLabor + D;
+  // Recurring Calculations
+  const recurringFence = L * fenceRate;
+  const recurringPrivacy = L * privacyRate * P;
+  const recurringGate = G * gateRate;
+  const recurringPotties = potties * pottyRate;
+  const recurringHandWash = handWash * handWashRate;
 
-  // Grand Total Formula
-  let rawTotal = (totalMonthly * M) + setupTotal;
+  let subtotalRecurring = recurringFence + recurringPrivacy + recurringGate + recurringPotties + recurringHandWash;
 
-  // Minimum Order Logic
+  // Package Discounts
+  let discountPct = 0;
+  if (preset === 'construction') discountPct = 0.10; // 10% off
+  else if (preset === 'event') discountPct = 0.15; // 15% off
+
+  const discountAmount = subtotalRecurring * discountPct;
+  const totalRecurring = subtotalRecurring - discountAmount;
+
+  // One-Time Setup & Delivery
+  const labor = (L * 0.17) + (potties * 15) + (handWash * 10);
+  const setupTotal = labor + D;
+
+  // Grand Total
+  let rawTotal = (totalRecurring * duration) + setupTotal;
   const finalTotal = rawTotal < 300 ? 300 : rawTotal;
 
-  // Equipment Breakdown based on user-entered panel width in Ft (W)
-  const panelWidth = W > 0 ? W : 12;
-  const panelsCount = Math.ceil(L / panelWidth);
-  const standsCount = panelsCount > 0 ? panelsCount + 1 : 0;
-  const clipsCount = panelsCount;
-
-  const quoteProductImg = document.getElementById('quoteProductImg');
-  if (quoteProductImg) {
-    const mainPanel = productsData.find(p => p.type === 'panel');
-    let imgSrc = mainPanel && mainPanel.image ? (mainPanel.image.startsWith('/') ? API_BASE + mainPanel.image : mainPanel.image) : 'assets/panel.svg';
-    if (P) {
-      imgSrc = 'assets/privacy_screen.svg';
-    }
-    quoteProductImg.src = imgSrc;
-  }
+  // Update UI Labels
+  document.getElementById('termUnitLabel').innerText = isMonthly ? 'Months' : 'Weeks';
+  document.getElementById('termRateLabel').innerText = isMonthly ? 'Monthly' : 'Weekly';
+  document.getElementById('termDurationUnitLabel').innerText = isMonthly ? 'Months' : 'Weeks';
 
   if (document.getElementById('resPanelsCount')) {
-    document.getElementById('resPanelsCount').innerText = `${panelsCount} Panels`;
-    document.getElementById('resStandsCount').innerText = `${standsCount} Stands`;
-    document.getElementById('resClipsCount').innerText = `${clipsCount} Clips`;
+    document.getElementById('resPanelsCount').innerText = `Temporary Fence (${L} LF)`;
+    document.getElementById('resFenceRate').innerText = `$${(recurringFence + recurringPrivacy + recurringGate).toFixed(2)} / ${isMonthly ? 'mo' : 'wk'}`;
+    document.getElementById('resPortaCount').innerText = `${potties} Porta Potties`;
+    document.getElementById('resPortaRate').innerText = `$${recurringPotties.toFixed(2)} / ${isMonthly ? 'mo' : 'wk'}`;
+    document.getElementById('resHandCount').innerText = `${handWash} Hand Wash Stations`;
+    document.getElementById('resHandRate').innerText = `$${recurringHandWash.toFixed(2)} / ${isMonthly ? 'mo' : 'wk'}`;
   }
 
   document.getElementById('resSetupTotal').innerText = `$${setupTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  document.getElementById('resMonthlyTotal').innerText = `$${totalMonthly.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / month`;
-  document.getElementById('resMonthsSpan').innerText = M;
+  document.getElementById('resRecurringTotal').innerText = `$${totalRecurring.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / ${isMonthly ? 'mo' : 'wk'}`;
+
+  const discountRow = document.getElementById('packageDiscountRow');
+  if (discountPct > 0) {
+    discountRow.style.display = 'flex';
+    document.getElementById('resDiscountTotal').innerText = `-$${discountAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (${(discountPct * 100)}% Off)`;
+  } else {
+    discountRow.style.display = 'none';
+  }
+
+  document.getElementById('resDurationSpan').innerText = duration;
   document.getElementById('resGrandTotal').innerText = `$${finalTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   quoteData = {
     linearFeet: L,
-    months: M,
+    duration,
+    termType,
+    potties,
+    handWash,
     privacy: P,
     gates: G,
     delivery: D,
-    totalMonthly,
+    totalRecurring,
     setupTotal,
+    discountAmount,
     finalTotal
   };
 }

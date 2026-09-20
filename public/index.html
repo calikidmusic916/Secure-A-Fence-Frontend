@@ -346,76 +346,96 @@
     <!-- PAGE VIEW 2: INTERACTIVE FENCE RENTAL -->
     <section id="calc-view" class="page-view">
       <div class="section-header">
-        <h2 class="section-title">Fence Rental</h2>
+        <h2 class="section-title">Turnkey Rental &amp; Sanitation Calculator</h2>
       </div>
       <div class="calc-card">
         <div class="calc-grid">
           <div>
-            <h3>Jobsite Rental Quote Input</h3>
+            <h3>Project &amp; Equipment Configuration</h3>
             <p style="color: var(--text-muted); margin-bottom: 1.25rem; font-size: 0.9rem;">
-              Enter your project details to instantly calculate your estimated rental costs, including labor and delivery.
+              Calculate competitive pricing for temporary fencing, porta potties, and hand washing stations with monthly, weekly, or turnkey package rates.
             </p>
 
-            <!-- Product Image Preview for Rented Equipment -->
-            <div class="quote-product-preview" style="background: var(--bg-dark); border: 1px solid var(--border); border-radius: 0.75rem; padding: 1rem; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 1rem;">
-              <div style="width: 80px; height: 80px; min-width: 80px; background: #020617; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; padding: 0.5rem; border: 1px solid var(--border);">
-                <img id="quoteProductImg" src="assets/panel.svg" alt="Rented Equipment" style="max-width: 100%; max-height: 100%; object-fit: contain;">
-              </div>
-              <div>
-                <span style="font-size: 0.75rem; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; display: block;">Rented Equipment</span>
-                <h4 id="quoteProductName" style="color: #fff; margin: 0.2rem 0; font-size: 0.95rem;">6' x 12' Temporary Chain-Link Fence Panel</h4>
-                <p id="quoteProductSub" style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">Includes Heavy Bases, Coupler Clips &amp; Delivery</p>
-              </div>
-            </div>
             <div class="form-group">
-              <label class="form-label">Linear Feet Needed (L)</label>
-              <input type="number" id="calcLinearFeet" class="form-input" value="500" placeholder="e.g. 500" oninput="runCalculator()">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Fence Panel Width in Ft (W)</label>
-              <input type="number" id="calcPanelWidth" class="form-input" value="12" min="1" placeholder="e.g. 12" oninput="runCalculator()">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Estimated Rental Duration (Months)</label>
-              <input type="number" id="calcMonths" class="form-input" value="3" min="1" oninput="runCalculator()">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Number of Pedestrian Gates (G)</label>
-              <input type="number" id="calcGates" class="form-input" value="1" min="0" oninput="runCalculator()">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Delivery Zone (D)</label>
-              <select id="calcDeliveryZone" class="form-select" onchange="runCalculator()">
-                <option value="125">Local (Zone 1) = $125</option>
-                <option value="200">Regional (Zone 2) = $200</option>
+              <label class="form-label">Select Pricing Preset / Package</label>
+              <select id="calcPackagePreset" class="form-select" onchange="applyPackagePreset()">
+                <option value="custom">Custom Equipment Configuration</option>
+                <option value="construction">🏗️ Turnkey Construction Package (500 LF Fence + 2 Potties + 1 Sink - 10% Off)</option>
+                <option value="event">🎉 Outdoor Event / Festival Package (300 LF Barricades + 4 Potties + 2 Sinks - 15% Off)</option>
               </select>
             </div>
+
+            <div class="form-group">
+              <label class="form-label">Rental Term Duration</label>
+              <select id="calcTermType" class="form-select" onchange="runCalculator()">
+                <option value="monthly">Monthly Long-Term (Contractor / Jobsite)</option>
+                <option value="weekly">Weekly Short-Term (Event / Festival / Emergency)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Temporary Fence Linear Feet (L)</label>
+              <input type="number" id="calcLinearFeet" class="form-input" value="500" placeholder="e.g. 500" oninput="runCalculator()">
+              <input type="hidden" id="calcPanelWidth" value="12">
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="form-group">
+                <label class="form-label">Porta Potties (Units)</label>
+                <input type="number" id="calcPortaPotties" class="form-input" value="2" min="0" oninput="runCalculator()">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Hand Wash Stations (Units)</label>
+                <input type="number" id="calcHandWash" class="form-input" value="1" min="0" oninput="runCalculator()">
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="form-group">
+                <label class="form-label">Duration Count (<span id="termUnitLabel">Months</span>)</label>
+                <input type="number" id="calcDurationCount" class="form-input" value="3" min="1" oninput="runCalculator()">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Pedestrian Gates (G)</label>
+                <input type="number" id="calcGates" class="form-input" value="1" min="0" oninput="runCalculator()">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Delivery Zone (Sacramento Area)</label>
+              <select id="calcDeliveryZone" class="form-select" onchange="runCalculator()">
+                <option value="125">Local Sacramento Area (Zone 1) = $125</option>
+                <option value="200">Regional Suburbs (Zone 2) = $200</option>
+              </select>
+            </div>
+
             <div class="form-group">
               <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: #fff;">
-                <input type="checkbox" id="calcPrivacy" checked onchange="runCalculator()"> Add Privacy Screen?
+                <input type="checkbox" id="calcPrivacy" checked onchange="runCalculator()"> Add Privacy Windscreen Mesh?
               </label>
             </div>
           </div>
 
           <div>
-            <h3>Your Secure A Fence Estimate</h3>
+            <h3>Your Turnkey Rental Estimate</h3>
             <div class="calc-results" id="calcResultsBox">
               <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid var(--primary); padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 1rem;">
-                <h4 style="color: var(--primary); margin-bottom: 0.25rem; font-size: 0.85rem;">EQUIPMENT BREAKDOWN</h4>
-                <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-main);">
-                  <span id="resPanelsCount">0 Panels</span>
-                  <span id="resStandsCount">0 Stands</span>
-                  <span id="resClipsCount">0 Clips</span>
+                <h4 style="color: var(--primary); margin-bottom: 0.25rem; font-size: 0.85rem;">EQUIPMENT &amp; SANITATION BREAKDOWN</h4>
+                <div style="display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.85rem; color: var(--text-main);">
+                  <div style="display: flex; justify-content: space-between;"><span id="resPanelsCount">0 Panels</span><span id="resFenceRate">$0.00</span></div>
+                  <div style="display: flex; justify-content: space-between;"><span id="resPortaCount">0 Porta Potties</span><span id="resPortaRate">$0.00</span></div>
+                  <div style="display: flex; justify-content: space-between;"><span id="resHandCount">0 Hand Wash Stations</span><span id="resHandRate">$0.00</span></div>
                 </div>
               </div>
 
-              <div class="result-item"><span>One-Time Setup (Delivery, Install, Removal):</span><strong id="resSetupTotal">$295.00</strong></div>
-              <div class="result-item"><span>Recurring Monthly Rate:</span><strong id="resMonthlyTotal">$865.00 / month</strong></div>
+              <div class="result-item"><span>One-Time Setup &amp; Delivery:</span><strong id="resSetupTotal">$295.00</strong></div>
+              <div class="result-item"><span>Recurring <span id="termRateLabel">Monthly</span> Rate:</span><strong id="resRecurringTotal">$1,125.00 / mo</strong></div>
+              <div class="result-item" id="packageDiscountRow" style="display: none; color: var(--success);"><span>Turnkey Package Discount:</span><strong id="resDiscountTotal">-$0.00</strong></div>
               
               <div class="comparison-box" style="grid-template-columns: 1fr;">
                 <div class="option-card highlight">
-                  <div class="option-title">Total Estimated Cost (for <span id="resMonthsSpan">3</span> months)</div>
-                  <div class="option-price" id="resGrandTotal">$2,890.00</div>
+                  <div class="option-title">Total Estimated Cost (for <span id="resDurationSpan">3</span> <span id="termDurationUnitLabel">Months</span>)</div>
+                  <div class="option-price" id="resGrandTotal">$3,670.00</div>
                   <button class="btn btn-accent" style="width: 100%; margin-top: 0.75rem;" onclick="submitRentalQuote()">Request Contract &amp; Secure Delivery Date</button>
                 </div>
               </div>
